@@ -1,0 +1,69 @@
+// Schéma de base de données PestAlert
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modèle Agriculteurs
+model Farmer {
+  id               String   @id @default(cuid())
+  phone            String   @unique
+  name             String
+  location         Json
+  subscriptionType String   @default("basic") @map("subscription_type")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  alerts           Alert[]
+
+  @@map("farmers")
+}
+
+// Modèle Alertes
+model Alert {
+  id           String        @id @default(cuid())
+  farmerId     String        @map("farmer_id")
+  type         String
+  severity     String
+  message      String
+  location     Json
+  imageUrl     String?       @map("image_url")
+  status       String        @default("active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  farmer       Farmer        @relation(fields: [farmerId], references: [id])
+  interventions Intervention[]
+
+  @@map("alerts")
+}
+
+// Modèle Agents
+model Agent {
+  id           String        @id @default(cuid())
+  name         String
+  phone        String        @unique
+  location     Json
+  status       String        @default("available")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  interventions Intervention[]
+
+  @@map("agents")
+}
+
+// Modèle Interventions
+model Intervention {
+  id           String   @id @default(cuid())
+  alertId      String   @map("alert_id")
+  agentId      String   @map("agent_id")
+  status       String   @default("pending")
+  estimatedTime Int?    @map("estimated_time")
+  actualTime   Int?     @map("actual_time")
+  report       String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  alert        Alert    @relation(fields: [alertId], references: [id])
+  agent        Agent    @relation(fields: [agentId], references: [id])
+
+  @@map("interventions")
+}
