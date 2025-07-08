@@ -141,4 +141,4 @@ Pour toute question ou problème :
 
 ---
 
-**Développé avec ❤️ pour les agriculteurs du Togo**
+**Développé avec ❤️ pour les agriculteurs de l'Afrique**
