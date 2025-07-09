@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/index.ts",
+    "dev:simple": "ts-node src/bot-simple.ts",
     "start": "node dist/index.js",
     "test": "jest"
   },
