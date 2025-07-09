@@ -11,6 +11,11 @@ dotenv.config();
 const pestMonitoring = new PestMonitoringService();
 const logger = new LoggingService();
 
+// Timestamp de démarrage du bot - IMPORTANT pour ignorer les anciens messages
+const BOT_START_TIME = Date.now();
+console.log(`🚀 Bot démarré à: ${new Date(BOT_START_TIME).toLocaleString()}`);
+console.log(`⏰ Timestamp de démarrage: ${BOT_START_TIME}`);
+
 const client = new Client({
   authStrategy: new LocalAuth({
     dataPath: process.env.WHATSAPP_SESSION_PATH || './sessions'
@@ -38,32 +43,55 @@ client.on('qr', (qr) => {
 
 client.on('ready', () => {
   console.log('✅ Bot WhatsApp PestAlert connecté!');
-  logger.logBotActivity('SYSTEM', 'Bot WhatsApp connecté et prêt');
+  console.log('🔒 FILTRES DE SÉCURITÉ ACTIVÉS:');
+  console.log('   - Ignore TOUS les messages de groupes');
+  console.log('   - Ignore TOUS les messages du bot lui-même');
+  console.log('   - Ignore TOUS les messages antérieurs au démarrage');
+  console.log('   - Répond SEULEMENT aux messages privés reçus APRÈS le démarrage');
+  console.log(`   - Timestamp de démarrage: ${new Date(BOT_START_TIME).toLocaleString()}`);
+  logger.logBotActivity('SYSTEM', 'Bot WhatsApp connecté et prêt avec filtres de sécurité');
 });
 
 client.on('message', async (message) => {
   const contact = await message.getContact();
   const chat = await message.getChat();
 
-  console.log(`📩 Message de ${contact.name || contact.number}: ${message.body}`);
+  // FILTRES STRICTS - TRÈS IMPORTANT
 
-  // Logger le message reçu
-  logger.logBotActivity(contact.number, 'Message reçu', {
-    messageType: message.hasMedia ? 'media' : 'text',
-    messageBody: message.body.substring(0, 100), // Limiter la longueur pour le log
-    isGroup: chat.isGroup,
-    fromMe: message.fromMe
-  });
-
-  // Ignorer les messages envoyés par le bot lui-même
+  // 1. Ignorer TOUS les messages envoyés par le bot lui-même
   if (message.fromMe) {
     return;
   }
 
-  // Ignorer les messages de groupes (optionnel - décommentez si vous voulez ignorer les groupes)
-  // if (chat.isGroup) {
-  //   return;
-  // }
+  // 2. Ignorer TOUS les messages de groupes
+  if (chat.isGroup) {
+    console.log(`🚫 Message de groupe ignoré: ${chat.name}`);
+    return;
+  }
+
+  // 3. Ignorer les messages antérieurs au démarrage du bot
+  const messageTimestamp = message.timestamp * 1000; // WhatsApp timestamp en secondes
+  if (messageTimestamp < BOT_START_TIME) {
+    console.log(`🚫 Message ancien ignoré (${new Date(messageTimestamp).toLocaleString()})`);
+    return;
+  }
+
+  // 4. Vérifier que c'est bien un chat privé
+  if (!chat.isGroup && !message.fromMe) {
+    console.log(`📩 Message VALIDE de ${contact.name || contact.number}: ${message.body}`);
+
+    // Logger le message reçu
+    logger.logBotActivity(contact.number, 'Message reçu', {
+      messageType: message.hasMedia ? 'media' : 'text',
+      messageBody: message.body.substring(0, 100), // Limiter la longueur pour le log
+      isGroup: chat.isGroup,
+      fromMe: message.fromMe,
+      timestamp: new Date(messageTimestamp).toISOString()
+    });
+  } else {
+    console.log(`🚫 Message filtré: groupe=${chat.isGroup}, fromMe=${message.fromMe}`);
+    return;
+  }
 
   try {
     // Gérer les médias (photos) - SEULEMENT si c'est une image
@@ -86,24 +114,31 @@ client.on('message', async (message) => {
   }
 });
 
-// Fonction pour gérer les médias (photos de cultures)
+// Function to handle media messages (crop photos)
 async function handleMediaMessages(message: any) {
+  // SÉCURITÉ SUPPLÉMENTAIRE - Vérifier encore une fois
+  const chat = await message.getChat();
+  if (message.fromMe || chat.isGroup) {
+    console.log(`🚫 SÉCURITÉ: Tentative de traitement d'un message non autorisé`);
+    return;
+  }
+
   if (message.hasMedia) {
     const media = await message.downloadMedia();
-    console.log(`📎 Média reçu: ${media.mimetype}`);
+    console.log(`📎 Media received: ${media.mimetype}`);
 
     if (media.mimetype.startsWith('image/')) {
-      await message.reply('📷 *Analyse de votre photo en cours...*\n\n🔍 Notre IA analyse votre culture pour détecter d\'éventuels parasites ou maladies.\n\n⏳ Résultats dans quelques instants...');
+      await message.reply('📷 *Analyzing your crop image...*\n\n🔍 Our AI is analyzing your crop to detect potential pests or diseases.\n\n⏳ Results in a few moments...');
 
       try {
-        // Conversion du média en Buffer
+        // Convert media to Buffer
         const imageBuffer = Buffer.from(media.data, 'base64');
 
-        // Données de l'agriculteur (simulation - à améliorer avec une vraie base de données)
+        // Farmer data (simulation - to be improved with real database)
         const contact = await message.getContact();
         const farmerData: FarmerData = {
           phone: contact.number,
-          location: { lat: 14.6928, lon: -17.4467 }, // Dakar par défaut
+          location: { lat: 14.6928, lon: -17.4467 }, // Dakar by default
           subscription: 'basic'
         };
 
@@ -111,100 +146,106 @@ async function handleMediaMessages(message: any) {
         let isAlert = false;
 
         try {
-          // Tentative d'analyse réelle avec OpenEPI
+          // Attempt real analysis with OpenEPI
           const analysisResponse = await pestMonitoring.handleImageAnalysis(imageBuffer, farmerData);
 
-          // Obtenir la note vocale appropriée selon le résultat
+          // Get appropriate audio response based on result
           audioResponse = await pestMonitoring.getAudioResponse(analysisResponse.analysis.alert);
           isAlert = analysisResponse.analysis.alert.critical;
 
-          console.log(`✅ Analyse réussie: ${isAlert ? 'Alerte critique' : 'Réponse normale'}`);
+          console.log(`✅ Analysis successful: ${isAlert ? 'Critical alert' : 'Normal response'}`);
 
         } catch (analysisError: any) {
-          console.log('⚠️ Erreur API, envoi de la réponse normale par défaut');
+          console.log('⚠️ API error, sending default normal response');
 
-          // En cas d'erreur de l'API, envoyer toujours la réponse normale
+          // In case of API error, always send normal response
           audioResponse = await pestMonitoring.getNormalAudioResponse();
           isAlert = false;
 
-          // Logger l'erreur mais continuer le processus
+          // Log error but continue process
           logger.logServiceError('API_FALLBACK', analysisError.message, contact.number);
         }
 
-        // Toujours envoyer une note vocale
+        // Always send an audio note
         if (audioResponse) {
           await client.sendMessage(contact.number + '@c.us', audioResponse);
-          console.log(`🎵 Note vocale envoyée: ${isAlert ? 'Alerte' : 'Réponse normale'}`);
+          console.log(`🎵 Audio note sent: ${isAlert ? 'Alert' : 'Normal response'}`);
         } else {
-          // Si même les fichiers audio ne sont pas disponibles, envoyer un message par défaut
-          await message.reply('🌾 *Analyse terminée*\n\nVotre image a été analysée. Les fichiers audio ne sont pas disponibles actuellement.');
-          console.log('⚠️ Fichiers audio non disponibles, message texte envoyé');
+          // If audio files are not available, send default message
+          await message.reply('🌾 *Analysis completed*\n\nYour image has been analyzed. Audio files are currently unavailable.');
+          console.log('⚠️ Audio files unavailable, text message sent');
         }
 
-        // Si c'est une alerte critique, envoyer des informations supplémentaires en texte
+        // If it's a critical alert, send additional text information
         if (isAlert) {
-          await message.reply('🆘 *ALERTE CRITIQUE ACTIVÉE*\n\nUn expert sera contacté immédiatement.\nSuivez les recommandations de la note vocale.');
+          await message.reply('🆘 *CRITICAL ALERT ACTIVATED*\n\nAn expert will be contacted immediately.\nFollow the recommendations in the audio note.');
         }
 
       } catch (error: any) {
-        console.error('❌ Erreur critique lors du traitement:', error.message);
+        console.error('❌ Critical error during processing:', error.message);
 
-        // Logger l'erreur critique
+        // Log critical error
         const contact = await message.getContact();
         logger.logServiceError('CRITICAL_ERROR', error.message, contact.number);
 
-        // Même en cas d'erreur critique, essayer d'envoyer au moins la note vocale normale
+        // Even in case of critical error, try to send at least the normal audio note
         try {
           const fallbackAudio = await pestMonitoring.getNormalAudioResponse();
           if (fallbackAudio) {
             await client.sendMessage(contact.number + '@c.us', fallbackAudio);
-            console.log('🎵 Note vocale de secours envoyée');
+            console.log('🎵 Fallback audio note sent');
           } else {
-            await message.reply('🌾 *Image reçue*\n\nNous avons bien reçu votre image. Le service d\'analyse est temporairement indisponible.');
+            await message.reply('🌾 *Image received*\n\nWe have received your image. The analysis service is temporarily unavailable.');
           }
         } catch (fallbackError) {
-          await message.reply('❌ Une erreur s\'est produite. Veuillez réessayer plus tard.');
+          await message.reply('❌ An error occurred. Please try again later.');
         }
       }
     } else {
-      await message.reply('📷 Veuillez envoyer une image de vos cultures pour l\'analyse.');
+      await message.reply('📷 Please send an image of your crops for analysis.');
     }
   }
 }
 
-// Fonction pour gérer les commandes
+// Function to handle commands
 async function handleCommands(message: any) {
+  // SÉCURITÉ SUPPLÉMENTAIRE - Vérifier encore une fois
+  const chat = await message.getChat();
+  if (message.fromMe || chat.isGroup) {
+    console.log(`🚫 SÉCURITÉ: Tentative de commande non autorisée`);
+    return;
+  }
+
   const body = message.body.toLowerCase();
 
   switch(body) {
     case '!ping':
-      await message.reply('🤖 Pong! Bot PestAlert actif.');
+      await message.reply('🤖 Pong! PestAlert Bot active.');
       break;
 
     case '!hello':
-    case '!salut':
+    case '!hi':
       const contact = await message.getContact();
-      await message.reply(`👋 Salut ${contact.name || 'agriculteur'} ! Bienvenue sur PestAlert 🌾`);
+      await message.reply(`👋 Hello ${contact.name || 'farmer'}! Welcome to PestAlert 🌾`);
       break;
 
     case '!help':
-    case '!aide':
-      const helpText = `🌾 *PestAlert Bot - Assistant Agricole*
+      const helpText = `🌾 *PestAlert Bot - Agricultural Assistant*
 
-📋 **Commandes disponibles:**
-• !ping - Test de connexion
-• !help / !aide - Cette aide
-• !status - Statut des services d'analyse
-• !alert - Signaler un problème urgent
-• !conseils - Conseils généraux
-• !contact - Contacter un expert
-• !meteo - Météo agricole
-• !maladies - Maladies courantes
+📋 **Available commands:**
+• !ping - Connection test
+• !help - This help
+• !status - Analysis services status
+• !alert - Report urgent problem
+• !tips - General advice
+• !contact - Contact an expert
+• !weather - Agricultural weather
+• !diseases - Common diseases
 
-📷 **Analyse automatique:**
-Envoyez une photo de vos cultures pour une analyse IA instantanée !
+📷 **Automatic analysis:**
+Send a photo of your crops for instant AI analysis!
 
-🚨 **Urgence:** Tapez !alert pour signaler un problème critique`;
+🚨 **Emergency:** Type !alert to report a critical problem`;
       await message.reply(helpText);
       break;
 
@@ -316,8 +357,15 @@ Un expert sera notifié immédiatement.
   }
 }
 
-// Fonction pour les réponses naturelles
+// Function for natural responses
 async function handleNaturalResponses(message: any) {
+  // SÉCURITÉ SUPPLÉMENTAIRE - Vérifier encore une fois
+  const chat = await message.getChat();
+  if (message.fromMe || chat.isGroup) {
+    console.log(`🚫 SÉCURITÉ: Tentative de réponse naturelle non autorisée`);
+    return;
+  }
+
   const body = message.body.toLowerCase();
 
   if (body.includes('bonjour') || body.includes('salut') || body.includes('hello')) {

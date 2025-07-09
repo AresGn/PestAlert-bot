@@ -1,0 +1,702 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Crop Health API",
+    "description": "This is a RESTful service that provides predictions for crop health.<br/>The API consists of three pre-trained PyTorch models served using TorchServe. The models are designed to predict the health of crops based on images of the crops. The models were trained on the following crop types: maize, beans, cocoa, cassava, and banana.<br/>The data were collected from the <a href='https://dataverse.harvard.edu'>Harvard Dataverse</a> and are licensed under the <a href='https://creativecommons.org/publicdomain/zero/1.0/'>Creative Commons 1.0 DEED license.</a><br/>The models differ in the number of classes they predict. The models are:<br/>1. Binary model: This is a binary model that predicts the health of crops into three classes: healthy and diseased.<br/>2. Single-HLT model: This is a multiclass model that predicts the health of crops into a single healthy (HLT) class and several diseases.<br/>3. Multi-HLT model: This is a multiclass model that predicts the health of crops into multiple healthy (HLT) classes and several diseases.<br/>The key difference between the single-HLT and multi-HLT models is that only the multi-HLT model has a healthy class for each crop type.<br/>The nine specific datasets used can be found at the following URLs:<br/>1. <a href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/R0KL7R'>Spectrometry Cassava Dataset</a><br/>2. <a href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/T4RB0B'>Cassava Dataset Uganda</a><br/>3. <a href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/GDON8Q'>Maize Dataset Tanzania</a><br/>4. <a href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/6R78HR'>Maize Dataset Namibia</a><br/>5. <a href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/LPGHKK'>Maize Dataset Uganda</a><br/>6. <a href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/TCKVEW'>Beans Dataset Uganda</a><br/>7. <a href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/LQUWXW'>Bananas Dataset Tanzania</a><br/>8. <a href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/BBGQSP'>KaraAgro AI Cocoa Dataset</a><br/>9. <a href='https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/CXUMDS'>KaraAgro AI Maize Dataset</a>",
+    "version": "0.1.13"
+  },
+  "paths": {
+    "/ping": {
+      "get": {
+        "description": "Get TorchServe status.",
+        "operationId": "ping",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "TorchServe status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "Overall status of the TorchServe."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "cURL",
+            "source": "curl -i -X GET https://api.openepi.io/crop-health/ping\n"
+          },
+          {
+            "lang": "JavaScript",
+            "source": "const response = await fetch(\"https://api.openepi.io/crop-health/ping\");\nconst data = await response.json();\n"
+          },
+          {
+            "lang": "Python",
+            "source": "from httpx import Client\n\nwith Client() as client:\n    response = client.get(url=\"https://api.openepi.io/crop-health\" + \"/ping\")\n    data = response.json()\n"
+          }
+        ]
+      }
+    },
+    "/predictions/binary": {
+      "post": {
+        "description": "Health predictions by the Binary model.",
+        "operationId": "predictions_with_Binary",
+        "requestBody": {
+          "description": "Picture of a plant.",
+          "content": {
+            "*/*": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": "true"
+        },
+        "responses": {
+          "200": {
+            "description": "Predicted class confidences, all summing to 1.0.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BinaryPredictionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Model not found or Model Version not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No worker is available to serve request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "cURL",
+            "source": "curl -X POST https://api.openepi.io/crop-health/predictions/binary -T cocoa.jpg"
+          },
+          {
+            "lang": "JavaScript",
+            "source": "const imageData = fs.readFileSync('cocoa.jpg');\n\n// Get the binary model prediction for image cocoa.jpg \n// passed as a binary file in the request body\nfetch.then(async fetch => {\n    const response_binary = await fetch(\n        \"https://api-test.openepi.io/crop-health/predictions/binary\",\n        {\n            method: \"POST\",\n            body: imageData,\n        }\n    );\n    const data_binary = await response_binary.json();\n    // Print the prediction for the healthy class\n    console.log(data_binary.HLT);\n});\n"
+          },
+          {
+            "lang": "Python",
+            "source": "from httpx import Client\n\n# Open the image file as a binary file\nwith open(\"cocoa.jpg\", \"rb\") as image_file:\n    image_bytes = image_file.read()\n\nwith Client() as client:\n    # Get the binary model prediction for image cocoa.jpg\n    # passed as a binary file in the request body\n    response_binary = client.post(\n        url=\"https://api.openepi.io/crop-health\" + \"/predictions/binary\",\n        content=image_bytes,\n    )\n\n    data_binary = response_binary.json()\n    # Print the prediction for the healthy class\n    print(data_binary[\"HLT\"])\n"
+          }
+        ]
+      }
+    },
+    "/predictions/single-HLT": {
+      "post": {
+        "description": "Health predictions by the SingleHLT model.",
+        "operationId": "predictions_with_SingleHLT",
+        "requestBody": {
+          "description": "Picture of a plant.",
+          "content": {
+            "*/*": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": "true"
+        },
+        "responses": {
+          "200": {
+            "description": "Predicted class confidences, all summing to 1.0.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleHLTPredictionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Model not found or Model Version not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No worker is available to serve request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "cURL",
+            "source": "curl -X POST https://api.openepi.io/crop-health/predictions/single-HLT -T cocoa.jpg"
+          },
+          {
+            "lang": "JavaScript",
+            "source": "const imageData = fs.readFileSync('cocoa.jpg');\n\n// Get the single-HLT model prediction for image cocoa.jpg \n// passed as a binary file in the request body\nfetch.then(async fetch => {\n    const response_single = await fetch(\n        \"https://api-test.openepi.io/crop-health/predictions/single-HLT\",\n        {\n            method: \"POST\",\n            body: imageData,\n        }\n    );\n    const data_single = await response_single.json();\n    // Print the prediction for the CBSD class\n    console.log(data_single.CBSD);\n  });"
+          },
+          {
+            "lang": "Python",
+            "source": "from httpx import Client\n\n# Open the image file as a binary file\nwith open(\"cocoa.jpg\", \"rb\") as image_file:\n    image_bytes = image_file.read()\n\nwith Client() as client:\n    # Get the single-HLT model prediction for image cocoa.jpg\n    # passed as a binary file in the request body\n    response_single_HLT = client.post(\n        url=\"https://api.openepi.io/crop-health\" + \"/predictions/single-HLT\",\n        content=image_bytes,\n    )\n\n    data_single_HLT = response_single_HLT.json()\n    # Print the prediction for the CBSD class\n    print(data_single_HLT[\"CBSD\"])\n"
+          }
+        ]
+      }
+    },
+    "/predictions/multi-HLT": {
+      "post": {
+        "description": "Health predictions by the MultiHLT model.",
+        "operationId": "predictions_with_MultiHLT",
+        "requestBody": {
+          "description": "Picture of a plant.",
+          "content": {
+            "*/*": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": "true"
+        },
+        "responses": {
+          "200": {
+            "description": "Predicted class confidences, all summing to 1.0.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiHLTPredictionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Model not found or Model Version not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No worker is available to serve request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "type",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "Error code."
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Error type."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "cURL",
+            "source": "curl -X POST https://api.openepi.io/crop-health/predictions/multi-HLT -T cocoa.jpg"
+          },
+          {
+            "lang": "JavaScript",
+            "source": "const imageData = fs.readFileSync('cocoa.jpg');\n\n// Get the multi-HLT prediction for image cocoa.jpg \n// passed as a binary file in the request body\nfetch.then(async fetch => {\n  const response_multi = await fetch(\n      \"https://api-test.openepi.io/crop-health/predictions/multi-HLT\",\n      {\n          method: \"POST\",\n          body: imageData,\n      }\n  );\n  const data_multi = await response_multi.json();\n  // Print the prediction for the MLN_maize class\n  console.log(data_multi.MLN_maize);\n});"
+          },
+          {
+            "lang": "Python",
+            "source": "from httpx import Client\n\n# Open the image file as a binary file\nwith open(\"cocoa.jpg\", \"rb\") as image_file:\n    image_bytes = image_file.read()\n\nwith Client() as client:\n    # Get the multi-HLT model prediction for image cocoa.jpg\n    # passed as a binary file in the request body\n    response_multi_HLT = client.post(\n        url=\"https://api.openepi.io/crop-health\" + \"/predictions/multi-HLT\",\n        content=image_bytes,\n    )\n\n    data_multi_HLT = response_multi_HLT.json()\n    # Print the prediction for the MLN_maize class\n    print(data_multi_HLT[\"MLN_maize\"])\n"
+          }
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.openepi.io/crop-health"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "BinaryPredictionResponse": {
+        "type": "object",
+        "properties": {
+          "HLT": {
+            "type": "number",
+            "description": "Healthy"
+          },
+          "NOT_HLT": {
+            "type": "number",
+            "description": "Not Healthy"
+          }
+        },
+        "required": [
+          "HLT",
+          "NOT_HLT"
+        ],
+        "example": {
+          "HLT": 0.85,
+          "NOT_HLT": 0.15
+        }
+      },
+      "SingleHLTPredictionResponse": {
+        "type": "object",
+        "properties": {
+          "HLT": {
+            "type": "number",
+            "description": "Healthy"
+          },
+          "CBSD": {
+            "type": "number",
+            "description": "Cassava Brown Streak Disease"
+          },
+          "CMD": {
+            "type": "number",
+            "description": "Cassava Mosaic Disease"
+          },
+          "MLN": {
+            "type": "number",
+            "description": "Maize Lethal Necrosis"
+          },
+          "MSV": {
+            "type": "number",
+            "description": "Maize Streak Virus"
+          },
+          "FAW": {
+            "type": "number",
+            "description": "Fall Armyworm"
+          },
+          "MLB": {
+            "type": "number",
+            "description": "Maize Leaf Blight"
+          },
+          "BR": {
+            "type": "number",
+            "description": "Bean Rust"
+          },
+          "ALS": {
+            "type": "number",
+            "description": "Angular Leaf Spot"
+          },
+          "BS": {
+            "type": "number",
+            "description": "Black Sigatoka"
+          },
+          "FW": {
+            "type": "number",
+            "description": "Fusarium Wilt Race 1"
+          },
+          "ANT": {
+            "type": "number",
+            "description": "Anthracnose"
+          },
+          "CSSVD": {
+            "type": "number",
+            "description": "Cocoa Swollen Shoot Virus Disease"
+          }
+        },
+        "required": [
+          "HLT",
+          "CBSD",
+          "CMD",
+          "MLN",
+          "MSV",
+          "FAW",
+          "MLB",
+          "BR",
+          "ALS",
+          "BS",
+          "FW",
+          "ANT",
+          "CSSVD"
+        ],
+        "example": {
+          "HLT": 0.8450168371200562,
+          "CSSVD": 0.14720021188259125,
+          "ANT": 0.007312592584639788,
+          "CMD": 0.00043629767606034875,
+          "BR": 0.000018495124095352367,
+          "CBSD": 0.0000063890015553624835,
+          "FW": 0.000003867091891152086,
+          "FAW": 0.0000030916353352949955,
+          "ALS": 0.0000014288182228483493,
+          "MSV": 6.82656491335365e-7,
+          "MLB": 1.0789210591610754e-7,
+          "BS": 1.5242493489608933e-8,
+          "MLN": 1.5041418111039206e-9
+        }
+      },
+      "MultiHLTPredictionResponse": {
+        "type": "object",
+        "properties": {
+          "HLT_cassava": {
+            "type": "number",
+            "description": "Healthy Cassava"
+          },
+          "CBSD_cassava": {
+            "type": "number",
+            "description": "Cassava Brown Streak Disease"
+          },
+          "CMD_cassava": {
+            "type": "number",
+            "description": "Cassava Mosaic Disease"
+          },
+          "MLN_maize": {
+            "type": "number",
+            "description": "Maize Lethal Necrosis"
+          },
+          "HLT_maize": {
+            "type": "number",
+            "description": "Healthy Maize"
+          },
+          "MSV_maize": {
+            "type": "number",
+            "description": "Maize Streak Virus"
+          },
+          "FAW_maize": {
+            "type": "number",
+            "description": "Fall Armyworm"
+          },
+          "MLB_maize": {
+            "type": "number",
+            "description": "Maize Leaf Blight"
+          },
+          "HLT_beans": {
+            "type": "number",
+            "description": "Healthy Beans"
+          },
+          "BR_beans": {
+            "type": "number",
+            "description": "Bean Rust"
+          },
+          "ALS_beans": {
+            "type": "number",
+            "description": "Angular Leaf Spot"
+          },
+          "HLT_bananas": {
+            "type": "number",
+            "description": "Healthy Bananas"
+          },
+          "BS_bananas": {
+            "type": "number",
+            "description": "Black Sigatoka"
+          },
+          "FW_bananas": {
+            "type": "number",
+            "description": "Fusarium Wilt Race 1"
+          },
+          "HLT_cocoa": {
+            "type": "number",
+            "description": "Healthy Cocoa"
+          },
+          "ANT_cocoa": {
+            "type": "number",
+            "description": "Anthracnose"
+          },
+          "CSSVD_cocoa": {
+            "type": "number",
+            "description": "Cocoa Swollen Shoot Virus Disease"
+          }
+        },
+        "required": [
+          "HLT_cassava",
+          "CBSD_cassava",
+          "CMD_cassava",
+          "MLN_maize",
+          "HLT_maize",
+          "MSV_maize",
+          "FAW_maize",
+          "MLB_maize",
+          "HLT_beans",
+          "BR_beans",
+          "ALS_beans",
+          "HLT_bananas",
+          "BS_bananas",
+          "FW_bananas",
+          "HLT_cocoa",
+          "ANT_cocoa",
+          "CSSVD_cocoa"
+        ],
+        "example": {
+          "HLT_cocoa": 0.4922555685043335,
+          "CSSVD_cocoa": 0.31238827109336853,
+          "HLT_beans": 0.1199931725859642,
+          "HLT_maize": 0.055395256727933884,
+          "ANT_cocoa": 0.008309438824653625,
+          "BR_beans": 0.005891730077564716,
+          "HLT_bananas": 0.002898828824982047,
+          "ALS_beans": 0.0012257732450962067,
+          "CMD_cassava": 0.0009540125029161572,
+          "HLT_cassava": 0.0003349129983689636,
+          "FAW_maize": 0.00016859767492860556,
+          "CBSD_cassava": 0.00010111751180374995,
+          "MSV_maize": 0.0000391885478165932,
+          "FW_bananas": 0.000023203281671158038,
+          "MLB_maize": 0.000020815876268898137,
+          "MLN_maize": 8.257627115426658e-8,
+          "BS_bananas": 9.579996351760656e-9
+        }
+      }
+    }
+  }
+}

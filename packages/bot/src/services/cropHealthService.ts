@@ -1,4 +1,3 @@
-import FormData from 'form-data';
 import { cropHealthConfig } from '../config/openepi';
 import { AuthService } from './authService';
 import {
@@ -60,21 +59,15 @@ export class CropHealthService {
       // Obtenir le token d'authentification
       const token = await this.authService.getAccessToken();
 
-      // Préparer FormData pour l'upload
-      const formData = new FormData();
-      formData.append('image', imageBuffer, {
-        filename: metadata.filename || `crop_${Date.now()}.jpg`,
-        contentType: 'image/jpeg'
-      });
-
-      // Appel à la bonne route OpenEPI
-      const response = await fetch(`${this.baseURL}/crop-health/predictionsWithBinary`, {
+      // Appel à la vraie route OpenEPI avec les bonnes données
+      const response = await fetch(`${this.baseURL}/crop-health/predictions/binary`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          ...formData.getHeaders()
+          'Content-Type': 'application/octet-stream',
+          'Accept': 'application/json'
         },
-        body: formData
+        body: imageBuffer
       });
 
       if (!response.ok) {
@@ -84,9 +77,22 @@ export class CropHealthService {
 
       const data: any = await response.json();
 
+      // Traiter la réponse selon le format OpenEPI
+      let prediction: 'healthy' | 'diseased' = 'healthy';
+      let confidence = 0.5;
+
+      if (data.HLT !== undefined) {
+        // HLT score: < 0.5 = diseased, >= 0.5 = healthy
+        confidence = data.HLT;
+        prediction = confidence < 0.5 ? 'diseased' : 'healthy';
+      } else if (data.health) {
+        prediction = data.health === 'healthy' ? 'healthy' : 'diseased';
+        confidence = data.confidence || 0.8;
+      }
+
       return {
-        prediction: data.health === 'healthy' ? 'healthy' : 'diseased',
-        confidence: data.confidence || 0.8, // Valeur par défaut si non fournie
+        prediction,
+        confidence,
         timestamp: new Date().toISOString(),
         processing_time: data.processing_time
       };
@@ -96,28 +102,22 @@ export class CropHealthService {
   }
 
   /**
-   * Analyse avec probabilités - Route correcte OpenEPI
+   * Analyse avec probabilités - Route correcte OpenEPI (Single-HLT)
    */
   async analyzeMultiClass(imageBuffer: Buffer, options: any = {}): Promise<MultiClassAnalysisResult> {
     try {
       // Obtenir le token d'authentification
       const token = await this.authService.getAccessToken();
 
-      // Préparer FormData pour l'upload
-      const formData = new FormData();
-      formData.append('image', imageBuffer, {
-        filename: `crop_analysis_${Date.now()}.jpg`,
-        contentType: 'image/jpeg'
-      });
-
-      // Appel à la route avec probabilités
-      const response = await fetch(`${this.baseURL}/crop-health/predictionsWithProbabilities`, {
+      // Appel à la vraie route Single-HLT (13 classes)
+      const response = await fetch(`${this.baseURL}/crop-health/predictions/single-HLT`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          ...formData.getHeaders()
+          'Content-Type': 'application/octet-stream',
+          'Accept': 'application/json'
         },
-        body: formData
+        body: imageBuffer
       });
 
       if (!response.ok) {
@@ -127,11 +127,12 @@ export class CropHealthService {
 
       const data: any = await response.json();
 
-      // Traitement des résultats - adapter selon la structure réelle de la réponse
+      // Traitement des résultats selon le format OpenEPI
       let sortedPredictions: MultiClassPrediction[] = [];
 
-      if (data.probabilities && typeof data.probabilities === 'object') {
-        sortedPredictions = Object.entries(data.probabilities)
+      if (typeof data === 'object' && data !== null) {
+        // OpenEPI retourne un objet avec les classes et leurs scores
+        sortedPredictions = Object.entries(data)
           .map(([disease, confidence]) => ({
             disease,
             confidence: parseFloat(confidence as string),
@@ -141,9 +142,9 @@ export class CropHealthService {
       } else {
         // Fallback si la structure est différente
         sortedPredictions = [{
-          disease: data.health || 'unknown',
-          confidence: data.confidence || 0.5,
-          risk_level: this.calculateRiskLevel(data.confidence || 0.5)
+          disease: 'unknown',
+          confidence: 0.5,
+          risk_level: this.calculateRiskLevel(0.5)
         }];
       }
 
@@ -151,7 +152,7 @@ export class CropHealthService {
         top_prediction: sortedPredictions[0],
         all_predictions: sortedPredictions,
         timestamp: new Date().toISOString(),
-        analysis_type: 'probabilities'
+        analysis_type: 'single-HLT-13-classes'
       };
     } catch (error: any) {
       throw new Error(`Multi-class prediction failed: ${error.message}`);

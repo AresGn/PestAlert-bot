@@ -2,6 +2,11 @@
  * Configuration pour l'API OpenEPI
  */
 
+import dotenv from 'dotenv';
+
+// S'assurer que les variables d'environnement sont chargées
+dotenv.config();
+
 export interface OpenEPIConfig {
   baseURL: string;
   authURL: string;
