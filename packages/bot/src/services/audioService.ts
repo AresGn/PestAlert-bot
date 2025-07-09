@@ -56,10 +56,17 @@ export class AudioService {
   }
 
   /**
+   * Obtenir la note vocale pour une réponse incertaine
+   */
+  async getUncertainAudio(): Promise<MessageMedia | null> {
+    return await this.createAudioMessage('Incertaine.mp3');
+  }
+
+  /**
    * Vérifier que tous les fichiers audio nécessaires existent
    */
   checkAudioFiles(): { available: boolean; missing: string[] } {
-    const requiredFiles = ['Reponse.mp3', 'Alerte.mp3'];
+    const requiredFiles = ['Reponse.mp3', 'Alerte.mp3', 'Incertaine.mp3'];
     const missing: string[] = [];
 
     requiredFiles.forEach(filename => {

@@ -47,6 +47,14 @@ export interface AlertDecision {
   actions: string[];
 }
 
+export interface AlertDecisionWithConfidence extends AlertDecision {
+  uncertain: boolean;
+  confidenceLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+  binaryConfidence: number;
+  topPredictionConfidence: number;
+  reasoning: string;
+}
+
 export interface AnalysisResponse {
   analysis: {
     crop_health: {
@@ -54,7 +62,7 @@ export interface AnalysisResponse {
       multiClassResult: MultiClassAnalysisResult;
     };
     weather: WeatherAnalysis;
-    alert: AlertDecision;
+    alert: AlertDecisionWithConfidence;
   };
   timestamp: string;
 }

@@ -72,8 +72,10 @@ async function testServices() {
     if (audioStatus.available) {
       const reponseInfo = audioService.getAudioInfo('Reponse.mp3');
       const alerteInfo = audioService.getAudioInfo('Alerte.mp3');
+      const incertaineInfo = audioService.getAudioInfo('Incertaine.mp3');
       console.log(`  ✅ Reponse.mp3: ${reponseInfo.size} bytes`);
       console.log(`  ✅ Alerte.mp3: ${alerteInfo.size} bytes`);
+      console.log(`  ${incertaineInfo.exists ? '✅' : '❌'} Incertaine.mp3: ${incertaineInfo.exists ? incertaineInfo.size + ' bytes' : 'Missing - see README_Incertaine.md'}`);
     }
   } catch (error: any) {
     console.log('  ❌ Erreur service audio:', error.message);

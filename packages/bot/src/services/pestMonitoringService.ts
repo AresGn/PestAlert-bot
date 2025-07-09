@@ -4,6 +4,12 @@ import { LoggingService } from './loggingService';
 import { ErrorHandlingService } from './errorHandlingService';
 import { AudioService } from './audioService';
 import {
+  CONFIDENCE_THRESHOLDS,
+  determineConfidenceLevel,
+  generateReasoningText,
+  AlertDecisionWithConfidence
+} from '../config/confidenceThresholds';
+import {
   FarmerData,
   AnalysisResponse,
   AlertDecision,
@@ -84,12 +90,26 @@ export class PestMonitoringService {
         timestamp: new Date().toISOString()
       };
 
-      // Logger le succès de l'analyse
+      // Logger le succès de l'analyse avec informations de confiance
       this.logger.logImageAnalysis(phone, true, analysisResponse);
 
-      // Logger les alertes critiques
+      // Logger détaillé selon le type d'alerte
       if (alertDecision.critical) {
-        this.logger.logCriticalAlert(phone, alertDecision);
+        this.logger.logCriticalAlert(phone, {
+          ...alertDecision,
+          confidenceInfo: `Binary: ${(alertDecision.binaryConfidence * 100).toFixed(1)}%, Top: ${(alertDecision.topPredictionConfidence * 100).toFixed(1)}%`
+        });
+        console.log(`🚨 CRITICAL ALERT: ${alertDecision.reasoning}`);
+      } else if (alertDecision.uncertain) {
+        this.logger.logBotActivity(phone, 'Uncertain detection - low confidence', {
+          confidenceLevel: alertDecision.confidenceLevel,
+          binaryConfidence: alertDecision.binaryConfidence,
+          topPredictionConfidence: alertDecision.topPredictionConfidence,
+          reasoning: alertDecision.reasoning
+        });
+        console.log(`❓ UNCERTAIN: ${alertDecision.reasoning}`);
+      } else {
+        console.log(`✅ NORMAL: ${alertDecision.reasoning}`);
       }
 
       return analysisResponse;
@@ -117,62 +137,92 @@ export class PestMonitoringService {
   }
 
   /**
-   * Déterminer si une alerte doit être envoyée
+   * Déterminer si une alerte doit être envoyée avec seuils de confiance
    */
   private shouldAlert(
-    binaryResult: BinaryAnalysisResult, 
-    multiClassResult: MultiClassAnalysisResult, 
+    binaryResult: BinaryAnalysisResult,
+    multiClassResult: MultiClassAnalysisResult,
     weatherAnalysis: WeatherAnalysis,
     subscription: string
-  ): AlertDecision {
-    const decision: AlertDecision = {
+  ): AlertDecisionWithConfidence {
+    const binaryConfidence = binaryResult.confidence;
+    const topPredictionConfidence = multiClassResult.top_prediction.confidence;
+    const topPredictionDisease = multiClassResult.top_prediction.disease;
+
+    // Déterminer le niveau de confiance
+    const confidenceLevel = determineConfidenceLevel(binaryConfidence, topPredictionConfidence);
+
+    // Générer le raisonnement
+    const reasoning = generateReasoningText(
+      binaryConfidence,
+      topPredictionConfidence,
+      topPredictionDisease,
+      confidenceLevel
+    );
+
+    const decision: AlertDecisionWithConfidence = {
       critical: false,
       preventive: false,
+      uncertain: false,
       message: '',
-      actions: []
+      actions: [],
+      confidenceLevel,
+      binaryConfidence,
+      topPredictionConfidence,
+      reasoning
     };
 
-    // Détection critique : Fall Armyworm + conditions favorables
-    if (multiClassResult.top_prediction.disease.toLowerCase().includes('faw') && 
-        multiClassResult.top_prediction.confidence > 0.7 &&
-        weatherAnalysis.alert_level === 'CRITICAL') {
-      
-      decision.critical = true;
-      decision.message = `🚨 *CHENILLES LÉGIONNAIRES DÉTECTÉES !*
+    // Logique basée sur les seuils de confiance
+    switch (confidenceLevel) {
+      case 'HIGH':
+        // Confiance élevée - Alerte critique
+        decision.critical = true;
+        decision.message = `🚨 *HIGH CONFIDENCE DETECTION*
 
-📊 Niveau de confiance: ${(multiClassResult.top_prediction.confidence * 100).toFixed(1)}%
-🌤️ Conditions météo: FAVORABLES À LA PROPAGATION
+📊 Confidence Level: ${(Math.max(binaryConfidence, topPredictionConfidence) * 100).toFixed(1)}%
+🦠 Detected Issue: ${topPredictionDisease}
+🔬 Analysis: ${reasoning}
 
-⚡ *Actions recommandées:*
-[1] 🆘 Intervention urgente
-[2] 📞 Parler à expert
-[3] 🛒 Commander traitement`;
-      
-      decision.actions = ['urgent_intervention', 'expert_call', 'order_treatment'];
-    }
-    
-    // Alerte préventive
-    else if (weatherAnalysis.alert_level === 'HIGH' && 
-             binaryResult.prediction === 'diseased') {
-      
-      decision.preventive = true;
-      decision.message = `⚠️ *RISQUE ÉLEVÉ DE RAVAGEURS*
+⚡ *Immediate Actions Required:*
+[1] 🆘 Urgent intervention needed
+[2] 📞 Contact agricultural expert
+[3] 🛒 Prepare treatment immediately`;
 
-🌤️ Conditions favorables détectées
-🦠 Maladie possible sur vos cultures
+        decision.actions = ['urgent_intervention', 'expert_call', 'order_treatment'];
+        break;
 
-💡 *Actions recommandées:*
-[1] 🔍 Surveiller quotidiennement
-[2] 📱 Signaler autres symptômes
-[3] 🛡️ Traitement préventif`;
-      
-      decision.actions = ['daily_monitoring', 'report_symptoms', 'preventive_treatment'];
-    }
+      case 'MEDIUM':
+        // Confiance moyenne - Réponse préventive
+        decision.preventive = true;
+        decision.message = `⚠️ *MODERATE CONFIDENCE DETECTION*
 
-    // Réponse normale avec recommandations
-    else {
-      decision.message = this.generateNormalResponse(binaryResult, multiClassResult);
-      decision.actions = ['continue_monitoring', 'follow_recommendations'];
+📊 Confidence Level: ${(Math.max(binaryConfidence, topPredictionConfidence) * 100).toFixed(1)}%
+🦠 Possible Issue: ${topPredictionDisease}
+🔬 Analysis: ${reasoning}
+
+💡 *Recommended Actions:*
+[1] 🔍 Monitor crops daily
+[2] 📱 Report any symptom changes
+[3] 🛡️ Consider preventive treatment`;
+
+        decision.actions = ['daily_monitoring', 'report_symptoms', 'preventive_treatment'];
+        break;
+
+      case 'LOW':
+        // Confiance faible - Réponse incertaine
+        decision.uncertain = true;
+        decision.message = `❓ *UNCERTAIN DETECTION*
+
+📊 Confidence Level: ${(Math.max(binaryConfidence, topPredictionConfidence) * 100).toFixed(1)}%
+🔬 Analysis: ${reasoning}
+
+📷 *Please Retake Photo:*
+[1] 🌞 Better lighting conditions
+[2] 🔍 Clearer, closer image
+[3] 📐 Focus on affected area`;
+
+        decision.actions = ['retake_photo', 'improve_lighting', 'monitor_closely'];
+        break;
     }
 
     return decision;
@@ -267,12 +317,17 @@ ${this.generateRecommendations(multiClassResult)}
   }
 
   /**
-   * Obtenir la réponse audio appropriée selon le type d'alerte
+   * Obtenir la réponse audio appropriée selon le type d'alerte et la confiance
    */
-  async getAudioResponse(alertDecision: AlertDecision): Promise<any> {
+  async getAudioResponse(alertDecision: AlertDecisionWithConfidence): Promise<any> {
     if (alertDecision.critical) {
+      console.log(`🚨 Sending CRITICAL alert audio (confidence: ${(alertDecision.topPredictionConfidence * 100).toFixed(1)}%)`);
       return await this.audioService.getAlertAudio();
+    } else if (alertDecision.uncertain) {
+      console.log(`❓ Sending UNCERTAIN response audio (confidence: ${(Math.max(alertDecision.binaryConfidence, alertDecision.topPredictionConfidence) * 100).toFixed(1)}%)`);
+      return await this.audioService.getUncertainAudio();
     } else {
+      console.log(`✅ Sending NORMAL response audio (confidence: ${(alertDecision.topPredictionConfidence * 100).toFixed(1)}%)`);
       return await this.audioService.getNormalResponseAudio();
     }
   }
