@@ -94,7 +94,10 @@ export class CropHealthService {
         prediction,
         confidence,
         timestamp: new Date().toISOString(),
-        processing_time: data.processing_time
+        processing_time: data.processing_time,
+        raw_score: data.HLT || confidence,
+        image_quality: data.image_quality || 'unknown',
+        model_version: data.model_version || 'binary-v1'
       };
     } catch (error: any) {
       throw new Error(`Binary prediction failed: ${error.message}`);
@@ -109,8 +112,14 @@ export class CropHealthService {
       // Obtenir le token d'authentification
       const token = await this.authService.getAccessToken();
 
-      // Appel à la vraie route Single-HLT (13 classes)
-      const response = await fetch(`${this.baseURL}/crop-health/predictions/single-HLT`, {
+      // Choisir le modèle selon les options
+      const model = options.model || 'single-HLT';
+      const endpoint = model === 'multi-HLT' ? 'predictions/multi-HLT' : 'predictions/single-HLT';
+
+      console.log(`🔬 Utilisation du modèle: ${model}`);
+
+      // Appel à la vraie route OpenEPI
+      const response = await fetch(`${this.baseURL}/crop-health/${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -152,7 +161,11 @@ export class CropHealthService {
         top_prediction: sortedPredictions[0],
         all_predictions: sortedPredictions,
         timestamp: new Date().toISOString(),
-        analysis_type: 'single-HLT-13-classes'
+        analysis_type: model === 'multi-HLT' ? 'multi-HLT-17-classes' : 'single-HLT-13-classes',
+        processing_time: data.processing_time,
+        model_used: model,
+        image_quality: data.image_quality || 'unknown',
+        total_classes: sortedPredictions.length
       };
     } catch (error: any) {
       throw new Error(`Multi-class prediction failed: ${error.message}`);

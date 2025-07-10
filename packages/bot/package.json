@@ -13,7 +13,8 @@
     "test:filters": "ts-node src/test-filters.ts",
     "explore:api": "ts-node src/explore-api.ts",
     "test:routes": "ts-node src/test-routes.ts",
-    "test:new-flow": "ts-node src/test-new-flow.ts"
+    "test:new-flow": "ts-node src/test-new-flow.ts",
+    "test:enhanced-health": "ts-node src/test-enhanced-health-analysis.ts"
   },
   "dependencies": {
     "@types/form-data": "^2.2.1",

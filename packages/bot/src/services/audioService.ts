@@ -86,7 +86,7 @@ export class AudioService {
   /**
    * Vérifier que tous les fichiers audio nécessaires existent
    */
-  checkAudioFiles(): { available: boolean; missing: string[] } {
+  checkAudioFiles(): { available: boolean; missing: string[]; optional_missing: string[] } {
     const requiredFiles = [
       'Reponse.mp3',
       'Alerte.mp3',
@@ -95,7 +95,15 @@ export class AudioService {
       'CropSains.mp3',
       'CropMalade.mp3'
     ];
+
+    const optionalFiles = [
+      'CropIncertaine_TresFaible.mp3',
+      'CropIncertaine_Faible.mp3',
+      'CropMoyenne.mp3'
+    ];
+
     const missing: string[] = [];
+    const optionalMissing: string[] = [];
 
     requiredFiles.forEach(filename => {
       const filePath = path.join(this.audioPath, filename);
@@ -104,9 +112,17 @@ export class AudioService {
       }
     });
 
+    optionalFiles.forEach(filename => {
+      const filePath = path.join(this.audioPath, filename);
+      if (!fs.existsSync(filePath)) {
+        optionalMissing.push(filename);
+      }
+    });
+
     return {
       available: missing.length === 0,
-      missing
+      missing,
+      optional_missing: optionalMissing
     };
   }
 
