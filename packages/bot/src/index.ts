@@ -3,6 +3,11 @@ import qrcode from 'qrcode-terminal';
 import dotenv from 'dotenv';
 import { PestMonitoringService } from './services/pestMonitoringService';
 import { LoggingService } from './services/loggingService';
+import { UserSessionService, UserState } from './services/userSessionService';
+import { MenuService } from './services/menuService';
+import { HealthAnalysisService } from './services/healthAnalysisService';
+import { AudioService } from './services/audioService';
+import { AlertService } from './services/alertService';
 import { FarmerData } from './types';
 
 dotenv.config();
@@ -10,11 +15,19 @@ dotenv.config();
 // Initialisation des services
 const pestMonitoring = new PestMonitoringService();
 const logger = new LoggingService();
+const userSessionService = new UserSessionService();
+const audioService = new AudioService();
+const menuService = new MenuService(userSessionService, audioService);
+const healthAnalysisService = new HealthAnalysisService();
+const alertService = new AlertService();
 
 // Timestamp de démarrage du bot - IMPORTANT pour ignorer les anciens messages
 const BOT_START_TIME = Date.now();
 console.log(`🚀 Bot démarré à: ${new Date(BOT_START_TIME).toLocaleString()}`);
 console.log(`⏰ Timestamp de démarrage: ${BOT_START_TIME}`);
+
+// Démarrer le nettoyage automatique des sessions
+userSessionService.startSessionCleanup();
 
 const client = new Client({
   authStrategy: new LocalAuth({
@@ -94,25 +107,114 @@ client.on('message', async (message) => {
   }
 
   try {
-    // Gérer les médias (photos) - SEULEMENT si c'est une image
+    // 1. Vérifier d'abord le déclencheur d'accueil
+    if (message.body.trim() === 'Hi PestAlerte 👋') {
+      await handleWelcomeTrigger(message);
+      return;
+    }
+
+    // 2. Vérifier les commandes de retour au menu
+    if (menuService.isReturnToMenuCommand(message.body)) {
+      const menuMessage = menuService.returnToMainMenu(contact.number);
+      await message.reply(menuMessage);
+      return;
+    }
+
+    // 3. Vérifier les sélections de menu (1, 2, 3)
+    if (['1', '2', '3'].includes(message.body.trim())) {
+      await handleMenuSelection(message);
+      return;
+    }
+
+    // 4. Gérer les médias (photos) selon le contexte utilisateur
     if (message.hasMedia) {
       await handleMediaMessages(message);
-      return; // Sortir après avoir traité l'image
+      return;
     }
 
-    // Gérer les commandes SEULEMENT si ce n'est pas un média
-    await handleCommands(message);
-
-    // Réponses naturelles SEULEMENT si ce n'est pas un média et pas une commande
-    if (!message.body.startsWith('!')) {
-      await handleNaturalResponses(message);
+    // 5. Gérer les commandes traditionnelles (!ping, !help, etc.)
+    if (message.body.startsWith('!')) {
+      await handleCommands(message);
+      return;
     }
+
+    // 6. Réponses contextuelles selon l'état de l'utilisateur
+    await handleContextualResponses(message);
+
   } catch (error: any) {
     console.error('Erreur lors du traitement du message:', error);
     logger.logServiceError('MESSAGE_HANDLER', error.message, contact.number);
-    await message.reply('❌ An error occurred. Please try again.');
+    await message.reply('❌ Une erreur s\'est produite. Veuillez réessayer.');
   }
 });
+
+// Function to handle welcome trigger
+async function handleWelcomeTrigger(message: any) {
+  const contact = await message.getContact();
+  console.log(`👋 Déclencheur d'accueil reçu de ${contact.name || contact.number}`);
+
+  try {
+    const welcomeResponse = await menuService.handleWelcomeTrigger(contact.number);
+
+    // Envoyer d'abord l'audio de bienvenue
+    if (welcomeResponse.audioMessage) {
+      await message.reply(welcomeResponse.audioMessage);
+      // Attendre un peu avant d'envoyer le menu texte
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    // Puis envoyer le menu texte
+    await message.reply(welcomeResponse.textMessage);
+
+    logger.logBotActivity(contact.number, 'Welcome Trigger', {
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error: any) {
+    console.error('❌ Erreur lors du traitement de l\'accueil:', error.message);
+    await message.reply('❌ Erreur lors de l\'initialisation. Veuillez réessayer.');
+  }
+}
+
+// Function to handle menu selection
+async function handleMenuSelection(message: any) {
+  const contact = await message.getContact();
+  const option = message.body.trim();
+
+  console.log(`📋 Sélection de menu: ${option} par ${contact.name || contact.number}`);
+
+  try {
+    const selectionResult = await menuService.handleMenuSelection(contact.number, option);
+
+    await message.reply(selectionResult.message);
+
+    logger.logBotActivity(contact.number, 'Menu Selection', {
+      option: option,
+      success: selectionResult.success,
+      newState: selectionResult.newState,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error: any) {
+    console.error('❌ Erreur lors de la sélection de menu:', error.message);
+    await message.reply('❌ Erreur lors de la sélection. Veuillez réessayer.');
+  }
+}
+
+// Function to handle contextual responses
+async function handleContextualResponses(message: any) {
+  const contact = await message.getContact();
+
+  // Vérifier si l'utilisateur est en attente de détails d'alerte
+  if (userSessionService.isUserInState(contact.number, UserState.WAITING_FOR_ALERT_DETAILS)) {
+    await handleAlertText(message);
+    return;
+  }
+
+  // Obtenir l'aide contextuelle selon l'état de l'utilisateur
+  const helpMessage = menuService.getContextualHelp(contact.number);
+  await message.reply(helpMessage);
+}
 
 // Function to handle media messages (crop photos)
 async function handleMediaMessages(message: any) {
@@ -123,87 +225,193 @@ async function handleMediaMessages(message: any) {
     return;
   }
 
+  const contact = await message.getContact();
+
+  // Vérifier si l'utilisateur peut recevoir une image dans son état actuel
+  if (!menuService.canReceiveImage(contact.number)) {
+    const helpMessage = menuService.getContextualHelp(contact.number);
+    await message.reply(`❌ Je n'attends pas d'image pour le moment.\n\n${helpMessage}`);
+    return;
+  }
+
   if (message.hasMedia) {
     const media = await message.downloadMedia();
     console.log(`📎 Media received: ${media.mimetype}`);
 
     if (media.mimetype.startsWith('image/')) {
-      await message.reply('📷 *Analyzing your crop image...*\n\n🔍 Our AI is analyzing your crop to detect potential pests or diseases.\n\n⏳ Results in a few moments...');
+      // Déterminer le type d'analyse requis
+      const analysisType = menuService.getRequiredAnalysisType(contact.number);
 
-      try {
-        // Convert media to Buffer
-        const imageBuffer = Buffer.from(media.data, 'base64');
-
-        // Farmer data (simulation - to be improved with real database)
-        const contact = await message.getContact();
-        const farmerData: FarmerData = {
-          phone: contact.number,
-          location: { lat: 14.6928, lon: -17.4467 }, // Dakar by default
-          subscription: 'basic'
-        };
-
-        let audioResponse;
-        let isAlert = false;
-
-        try {
-          // Attempt real analysis with OpenEPI
-          const analysisResponse = await pestMonitoring.handleImageAnalysis(imageBuffer, farmerData);
-
-          // Get appropriate audio response based on result
-          audioResponse = await pestMonitoring.getAudioResponse(analysisResponse.analysis.alert);
-          isAlert = analysisResponse.analysis.alert.critical;
-
-          console.log(`✅ Analysis successful: ${isAlert ? 'Critical alert' : 'Normal response'}`);
-
-        } catch (analysisError: any) {
-          console.log('⚠️ API error, sending default normal response');
-
-          // In case of API error, always send normal response
-          audioResponse = await pestMonitoring.getNormalAudioResponse();
-          isAlert = false;
-
-          // Log error but continue process
-          logger.logServiceError('API_FALLBACK', analysisError.message, contact.number);
-        }
-
-        // Always send an audio note
-        if (audioResponse) {
-          await client.sendMessage(contact.number + '@c.us', audioResponse);
-          console.log(`🎵 Audio note sent: ${isAlert ? 'Alert' : 'Normal response'}`);
-        } else {
-          // If audio files are not available, send default message
-          await message.reply('🌾 *Analysis completed*\n\nYour image has been analyzed. Audio files are currently unavailable.');
-          console.log('⚠️ Audio files unavailable, text message sent');
-        }
-
-        // If it's a critical alert, send additional text information
-        if (isAlert) {
-          await message.reply('🆘 *CRITICAL ALERT ACTIVATED*\n\nAn expert will be contacted immediately.\nFollow the recommendations in the audio note.');
-        }
-
-      } catch (error: any) {
-        console.error('❌ Critical error during processing:', error.message);
-
-        // Log critical error
-        const contact = await message.getContact();
-        logger.logServiceError('CRITICAL_ERROR', error.message, contact.number);
-
-        // Even in case of critical error, try to send at least the normal audio note
-        try {
-          const fallbackAudio = await pestMonitoring.getNormalAudioResponse();
-          if (fallbackAudio) {
-            await client.sendMessage(contact.number + '@c.us', fallbackAudio);
-            console.log('🎵 Fallback audio note sent');
-          } else {
-            await message.reply('🌾 *Image received*\n\nWe have received your image. The analysis service is temporarily unavailable.');
-          }
-        } catch (fallbackError) {
-          await message.reply('❌ An error occurred. Please try again later.');
-        }
+      if (analysisType === 'health') {
+        await handleHealthAnalysis(message, media);
+      } else if (analysisType === 'pest') {
+        await handlePestAnalysis(message, media);
+      } else if (analysisType === 'alert') {
+        await handleAlertWithImage(message, media);
+      } else {
+        await message.reply('❌ Type d\'analyse non reconnu. Tapez "menu" pour revenir au menu principal.');
       }
     } else {
-      await message.reply('📷 Please send an image of your crops for analysis.');
+      await message.reply('📷 Veuillez envoyer une image de votre culture pour analyse.');
     }
+  }
+}
+
+// Function to handle health analysis (Option 1)
+async function handleHealthAnalysis(message: any, media: any) {
+  const contact = await message.getContact();
+
+  await message.reply('🌾 *Analyse de santé en cours...*\n\n🔍 Analyse pour déterminer si votre culture est saine ou malade.\n\n⏳ Résultats dans quelques instants...');
+
+  try {
+    const imageBuffer = Buffer.from(media.data, 'base64');
+
+    // Effectuer l'analyse de santé
+    const healthResult = await healthAnalysisService.analyzeCropHealth(imageBuffer, contact.number);
+
+    // Envoyer d'abord l'audio si disponible
+    if (healthResult.audioMessage) {
+      await client.sendMessage(contact.number + '@c.us', healthResult.audioMessage);
+      console.log(`🎵 Audio de santé envoyé: ${healthResult.isHealthy ? 'Saine' : 'Malade'}`);
+
+      // Attendre un peu avant d'envoyer le message texte
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+
+    // Puis envoyer le message texte détaillé
+    await message.reply(healthResult.textMessage);
+
+    // Réinitialiser l'état de l'utilisateur
+    userSessionService.resetSession(contact.number);
+
+  } catch (error: any) {
+    console.error('❌ Erreur lors de l\'analyse de santé:', error.message);
+    await message.reply('❌ Erreur lors de l\'analyse. Veuillez réessayer avec une nouvelle photo ou tapez "menu".');
+  }
+}
+
+// Function to handle pest analysis (Option 2) - Legacy functionality
+async function handlePestAnalysis(message: any, media: any) {
+  const contact = await message.getContact();
+
+  await message.reply('🐛 *Détection de ravageurs en cours...*\n\n🔍 Analyse pour détecter la présence de ravageurs.\n\n⏳ Résultats dans quelques instants...');
+
+  try {
+    const imageBuffer = Buffer.from(media.data, 'base64');
+
+    // Utiliser l'ancien système de détection des ravageurs
+    const farmerData: FarmerData = {
+      phone: contact.number,
+      location: { lat: 14.6928, lon: -17.4467 }, // Dakar by default
+      subscription: 'basic'
+    };
+
+    let audioResponse;
+    let isAlert = false;
+
+    try {
+      // Analyse avec le système existant de détection des ravageurs
+      const analysisResponse = await pestMonitoring.handleImageAnalysis(imageBuffer, farmerData);
+
+      // Obtenir la réponse audio appropriée
+      audioResponse = await pestMonitoring.getAudioResponse(analysisResponse.analysis.alert);
+      isAlert = analysisResponse.analysis.alert.critical;
+
+      console.log(`✅ Analyse de ravageurs réussie: ${isAlert ? 'Alerte critique' : 'Réponse normale'}`);
+
+    } catch (analysisError: any) {
+      console.log('⚠️ Erreur API, envoi de la réponse normale par défaut');
+
+      // En cas d'erreur API, toujours envoyer une réponse normale
+      audioResponse = await pestMonitoring.getNormalAudioResponse();
+      isAlert = false;
+
+      logger.logServiceError('PEST_ANALYSIS_FALLBACK', analysisError.message, contact.number);
+    }
+
+    // Toujours envoyer une note audio
+    if (audioResponse) {
+      await client.sendMessage(contact.number + '@c.us', audioResponse);
+      console.log(`🎵 Note audio envoyée: ${isAlert ? 'Alerte' : 'Réponse normale'}`);
+    } else {
+      await message.reply('🐛 *Analyse terminée*\n\nVotre image a été analysée. Les fichiers audio ne sont pas disponibles actuellement.');
+    }
+
+    // Si c'est une alerte critique, envoyer des informations textuelles supplémentaires
+    if (isAlert) {
+      await message.reply('🆘 *ALERTE CRITIQUE ACTIVÉE*\n\nUn expert sera contacté immédiatement.\nSuivez les recommandations dans la note audio.');
+    }
+
+    // Réinitialiser l'état de l'utilisateur
+    userSessionService.resetSession(contact.number);
+
+  } catch (error: any) {
+    console.error('❌ Erreur lors de l\'analyse de ravageurs:', error.message);
+    await message.reply('❌ Erreur lors de l\'analyse. Veuillez réessayer avec une nouvelle photo ou tapez "menu".');
+  }
+}
+
+// Function to handle alert text (Option 3)
+async function handleAlertText(message: any) {
+  const contact = await message.getContact();
+  const alertDescription = message.body;
+
+  await message.reply('🚨 *Traitement de votre alerte...*\n\n📝 Description reçue et analysée.\n\n⏳ Un expert sera notifié immédiatement.');
+
+  try {
+    const alertResponse = await alertService.handleTextAlert(
+      contact.number,
+      contact.name || contact.number,
+      alertDescription
+    );
+
+    if (alertResponse.success) {
+      await message.reply(alertResponse.message);
+    } else {
+      await message.reply(`❌ ${alertResponse.message}\n\n💡 Tapez 'menu' pour revenir au menu principal.`);
+    }
+
+    // Réinitialiser l'état de l'utilisateur
+    userSessionService.resetSession(contact.number);
+
+  } catch (error: any) {
+    console.error('❌ Erreur lors du traitement de l\'alerte textuelle:', error.message);
+    await message.reply('❌ Erreur lors du traitement de l\'alerte. Veuillez réessayer ou tapez "menu".');
+  }
+}
+
+// Function to handle alert with image (Option 3)
+async function handleAlertWithImage(message: any, media: any) {
+  const contact = await message.getContact();
+
+  await message.reply('🚨 *Traitement de votre alerte...*\n\n📷 Image reçue et enregistrée.\n\n⏳ Un expert sera notifié immédiatement.');
+
+  try {
+    const imageBuffer = Buffer.from(media.data, 'base64');
+
+    // Obtenir la description du contexte de session si disponible
+    const sessionContext = userSessionService.getSessionContext(contact.number);
+    const description = sessionContext.alertDescription || 'Alerte avec image';
+
+    const alertResponse = await alertService.handleImageAlert(
+      contact.number,
+      contact.name || contact.number,
+      imageBuffer,
+      description
+    );
+
+    if (alertResponse.success) {
+      await message.reply(alertResponse.message);
+    } else {
+      await message.reply(`❌ ${alertResponse.message}\n\n💡 Tapez 'menu' pour revenir au menu principal.`);
+    }
+
+    // Réinitialiser l'état de l'utilisateur
+    userSessionService.resetSession(contact.number);
+
+  } catch (error: any) {
+    console.error('❌ Erreur lors de l\'envoi d\'alerte avec image:', error.message);
+    await message.reply('❌ Erreur lors de l\'envoi de l\'alerte. Veuillez réessayer ou tapez "menu".');
   }
 }
 
@@ -230,22 +438,23 @@ async function handleCommands(message: any) {
       break;
 
     case '!help':
-      const helpText = `🌾 *PestAlert Bot - Agricultural Assistant*
+      const helpText = `🌾 *PestAlert Bot - Assistant Agricole*
 
-📋 **Available commands:**
-• !ping - Connection test
-• !help - This help
-• !status - Analysis services status
-• !alert - Report urgent problem
-• !tips - General advice
-• !contact - Contact an expert
-• !weather - Agricultural weather
-• !diseases - Common diseases
+🚀 **Pour commencer:**
+Tapez "Hi PestAlerte 👋" pour accéder au menu principal
 
-📷 **Automatic analysis:**
-Send a photo of your crops for instant AI analysis!
+📋 **Menu principal:**
+1️⃣ Analyser la santé (sain/malade)
+2️⃣ Vérifier la présence de ravageurs
+3️⃣ Envoyer une alerte
 
-🚨 **Emergency:** Type !alert to report a critical problem`;
+📋 **Commandes disponibles:**
+• !ping - Test de connexion
+• !help - Cette aide
+• !status - Statut des services
+• menu - Retour au menu principal
+
+💡 **Astuce:** Tapez "menu" à tout moment pour revenir au menu principal`;
       await message.reply(helpText);
       break;
 
@@ -253,6 +462,9 @@ Send a photo of your crops for instant AI analysis!
       try {
         await message.reply('🔍 Vérification du statut des services...');
         const servicesStatus = await pestMonitoring.checkServicesStatus();
+        const healthServiceStatus = await healthAnalysisService.checkServiceStatus();
+        const alertStats = alertService.getAlertStats();
+        const activeSessions = userSessionService.getActiveSessionsCount();
 
         const statusMessage = `🔧 *Statut des Services PestAlert*
 
@@ -264,6 +476,14 @@ ${servicesStatus.imageProcessing ? '✅ Opérationnel' : '❌ Indisponible'}
 
 🎵 **Fichiers audio:**
 ${servicesStatus.audioFiles.available ? '✅ Disponibles' : `❌ Manquants: ${servicesStatus.audioFiles.missing.join(', ')}`}
+
+🏥 **Service d'analyse de santé:**
+${healthServiceStatus.status === 'healthy' ? '✅ Opérationnel' : `❌ ${healthServiceStatus.error}`}
+
+🚨 **Système d'alertes:**
+✅ Opérationnel (${alertStats.total} alertes traitées)
+
+👥 **Sessions actives:** ${activeSessions}
 
 ⏰ Dernière vérification: ${new Date().toLocaleString('fr-FR')}
 
@@ -357,33 +577,7 @@ Un expert sera notifié immédiatement.
   }
 }
 
-// Function for natural responses
-async function handleNaturalResponses(message: any) {
-  // SÉCURITÉ SUPPLÉMENTAIRE - Vérifier encore une fois
-  const chat = await message.getChat();
-  if (message.fromMe || chat.isGroup) {
-    console.log(`🚫 SÉCURITÉ: Tentative de réponse naturelle non autorisée`);
-    return;
-  }
 
-  const body = message.body.toLowerCase();
-
-  if (body.includes('bonjour') || body.includes('salut') || body.includes('hello')) {
-    await message.reply('👋 Bonjour ! Je suis votre assistant PestAlert. Comment puis-je vous aider avec vos cultures aujourd\'hui ? 🌾');
-  }
-
-  if (body.includes('merci')) {
-    await message.reply('😊 De rien ! N\'hésitez pas si vous avez d\'autres questions sur vos cultures.');
-  }
-
-  if (body.includes('problème') || body.includes('maladie') || body.includes('parasite')) {
-    await message.reply('🔍 Je vois que vous avez un problème avec vos cultures. Envoyez-moi une photo pour que je puisse vous aider, ou tapez !alert si c\'est urgent.');
-  }
-
-  if (body.includes('photo') || body.includes('image')) {
-    await message.reply('📷 Parfait ! Envoyez-moi une photo claire de la zone affectée. Je l\'analyserai immédiatement.');
-  }
-}
 
 // Gestion des erreurs
 client.on('auth_failure', (msg) => {

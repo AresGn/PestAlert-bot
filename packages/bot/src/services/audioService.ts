@@ -63,10 +63,38 @@ export class AudioService {
   }
 
   /**
+   * Obtenir la note vocale de bienvenue
+   */
+  async getWelcomeAudio(): Promise<MessageMedia | null> {
+    return await this.createAudioMessage('Welcome.mp3');
+  }
+
+  /**
+   * Obtenir la note vocale pour culture saine
+   */
+  async getHealthyCropAudio(): Promise<MessageMedia | null> {
+    return await this.createAudioMessage('CropSains.mp3');
+  }
+
+  /**
+   * Obtenir la note vocale pour culture malade
+   */
+  async getDiseasedCropAudio(): Promise<MessageMedia | null> {
+    return await this.createAudioMessage('CropMalade.mp3');
+  }
+
+  /**
    * Vérifier que tous les fichiers audio nécessaires existent
    */
   checkAudioFiles(): { available: boolean; missing: string[] } {
-    const requiredFiles = ['Reponse.mp3', 'Alerte.mp3', 'Incertaine.mp3'];
+    const requiredFiles = [
+      'Reponse.mp3',
+      'Alerte.mp3',
+      'Incertaine.mp3',
+      'Welcome.mp3',
+      'CropSains.mp3',
+      'CropMalade.mp3'
+    ];
     const missing: string[] = [];
 
     requiredFiles.forEach(filename => {

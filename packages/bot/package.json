@@ -12,7 +12,8 @@
     "test:auth": "ts-node src/test-auth.ts",
     "test:filters": "ts-node src/test-filters.ts",
     "explore:api": "ts-node src/explore-api.ts",
-    "test:routes": "ts-node src/test-routes.ts"
+    "test:routes": "ts-node src/test-routes.ts",
+    "test:new-flow": "ts-node src/test-new-flow.ts"
   },
   "dependencies": {
     "@types/form-data": "^2.2.1",
