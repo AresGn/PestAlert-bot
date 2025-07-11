@@ -67,3 +67,95 @@ model Intervention {
 
   @@map("interventions")
 }
+
+// === NOUVELLES TABLES POUR LE DASHBOARD ===
+
+// Sessions du bot WhatsApp
+model BotSession {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  userPhone   String   @map("user_phone")
+  userName    String?  @map("user_name")
+  state       String   // IDLE, MAIN_MENU, WAITING_FOR_HEALTH_IMAGE, etc.
+  startTime   DateTime @map("start_time")
+  endTime     DateTime? @map("end_time")
+  messageCount Int     @default(0) @map("message_count")
+  lastActivity DateTime @map("last_activity")
+  location    Json?    // Géolocalisation si disponible
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("bot_sessions")
+  @@index([userId])
+  @@index([startTime])
+}
+
+// Analyses d'images effectuées
+model ImageAnalysis {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  userPhone       String   @map("user_phone")
+  analysisType    String   @map("analysis_type") // 'health' | 'pest' | 'alert'
+  isHealthy       Boolean? @map("is_healthy")
+  confidence      Float?
+  topDisease      String?  @map("top_disease")
+  processingTime  Float?   @map("processing_time")
+  imageQuality    String?  @map("image_quality")
+  success         Boolean  @default(true)
+  errorMessage    String?  @map("error_message")
+  alertLevel      String?  @map("alert_level") // NORMAL, PREVENTIVE, CRITICAL
+  location        Json?    // Géolocalisation si disponible
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("image_analyses")
+  @@index([userId])
+  @@index([analysisType])
+  @@index([createdAt])
+}
+
+// Métriques système pour le monitoring
+model SystemMetric {
+  id        String   @id @default(cuid())
+  service   String   // 'bot', 'api', 'database', 'openepi', 'whatsapp'
+  metric    String   // 'response_time', 'availability', 'error_rate', 'memory_usage'
+  value     Float
+  unit      String?  // 'ms', '%', 'mb', 'count'
+  metadata  Json?    // Données additionnelles
+  timestamp DateTime @default(now())
+
+  @@map("system_metrics")
+  @@index([service, metric])
+  @@index([timestamp])
+}
+
+// Utilisateurs du dashboard admin
+model DashboardUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      String   @default("admin") // 'admin', 'viewer', 'operator'
+  password  String
+  isActive  Boolean  @default(true) @map("is_active")
+  lastLogin DateTime? @map("last_login")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("dashboard_users")
+}
+
+// Logs d'activité du bot (pour audit et debugging)
+model BotActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  userPhone String?  @map("user_phone")
+  level     String   // 'INFO', 'WARN', 'ERROR', 'DEBUG'
+  category  String   // 'BOT_ACTIVITY', 'IMAGE_ANALYSIS', 'SERVICE_ERROR', etc.
+  message   String
+  data      Json?    // Données structurées additionnelles
+  timestamp DateTime @default(now())
+
+  @@map("bot_activity_logs")
+  @@index([userId])
+  @@index([level])
+  @@index([category])
+  @@index([timestamp])
+}
