@@ -81,23 +81,85 @@ Le Dashboard Admin PestAlert est une interface web moderne permettant aux admini
   - Filtrage par sévérité, statut, date
   - Recherche par agriculteur
   - Actions en lot
+  - Assignation automatique/manuelle aux agents
 
 - **Détails d'Alerte**
   - Informations complètes
   - Images associées
   - Historique des actions
-  - Assignation aux agents
+  - Géolocalisation de l'alerte
+  - Agent assigné et statut d'intervention
 
-### 4. Analytics et Rapports
+### 4. Gestion des Agents de Terrain
+- **Liste des Agents**
+  - Profils complets des agents
+  - Statut en temps réel (disponible, en mission, hors service)
+  - Localisation GPS en temps réel
+  - Zone de couverture géographique
+
+- **Performances des Agents**
+  - Nombre d'interventions effectuées
+  - Temps de réponse moyen
+  - Taux de résolution des alertes
+  - Évaluations des agriculteurs
+  - Statistiques par période
+
+- **Assignation Intelligente**
+  - Assignation automatique basée sur la proximité
+  - Prise en compte de la charge de travail
+  - Spécialisation par type de culture/problème
+  - Optimisation des trajets
+
+### 5. Gestion des Interventions
+- **Workflow Complet**
+  - Création automatique lors d'assignation d'alerte
+  - Suivi en temps réel du statut
+  - Communication agent ↔ agriculteur
+  - Validation et clôture d'intervention
+
+- **Suivi en Temps Réel**
+  - Position GPS de l'agent en route
+  - Temps estimé d'arrivée
+  - Notifications automatiques à l'agriculteur
+  - Mise à jour du statut en direct
+
+- **Rapports d'Intervention**
+  - Rapport détaillé post-intervention
+  - Photos avant/après
+  - Recommandations et traitements appliqués
+  - Suivi des résultats
+
+### 6. Cartographie et Géolocalisation
+- **Carte Interactive**
+  - Visualisation des alertes géolocalisées
+  - Position en temps réel des agents
+  - Zones de couverture des agents
+  - Clusters d'alertes par région
+
+- **Optimisation Géographique**
+  - Calcul des trajets optimaux
+  - Répartition équilibrée des zones
+  - Analyse de densité des alertes
+  - Planification des tournées
+
+### 7. Analytics et Rapports Avancés
 - **Statistiques d'Usage**
   - Graphiques temporels
   - Répartition géographique
   - Analyses de performance
+  - Métriques par agent et région
+
+- **Analytics des Interventions**
+  - Temps de réponse par zone géographique
+  - Efficacité des agents par type d'alerte
+  - Tendances saisonnières des problèmes
+  - Prédictions basées sur l'historique
 
 - **Rapports Exportables**
   - PDF/Excel des métriques
-  - Rapports personnalisés
+  - Rapports personnalisés par agent/région
   - Planification automatique
+  - Tableaux de bord exécutifs
 
 ## 🗄️ Base de Données
 
@@ -139,29 +201,47 @@ npm run test
 
 ## 🚀 Plan de Développement
 
-### Phase 1 : Infrastructure (En cours)
+### Phase 1 : Infrastructure ✅ TERMINÉE
 - [x] Configuration de la base de données étendue
-- [ ] Services de collecte de données
-- [ ] API endpoints pour les métriques
-- [ ] Authentification de base
+- [x] Services de collecte de données
+- [x] API endpoints pour les métriques
+- [x] Authentification de base
 
-### Phase 2 : Interface Core
-- [ ] Page d'aperçu avec KPIs
-- [ ] Graphiques et visualisations
-- [ ] Navigation et layout
-- [ ] Responsive design
+### Phase 2 : Interface Core ✅ TERMINÉE
+- [x] Page d'aperçu avec KPIs
+- [x] Graphiques et visualisations
+- [x] Navigation et layout
+- [x] Responsive design
 
-### Phase 3 : Fonctionnalités Avancées
-- [ ] Monitoring en temps réel
-- [ ] Gestion des alertes
-- [ ] Système de notifications
-- [ ] Filtres et recherche
+### Phase 3 : Gestion des Agents 🔄 EN COURS
+- [ ] Page "Agents de Terrain" avec liste et détails
+- [ ] Statut en temps réel des agents
+- [ ] Performances et statistiques des agents
+- [ ] Assignation manuelle des alertes aux agents
 
-### Phase 4 : Optimisation
-- [ ] Performance et caching
-- [ ] Tests complets
-- [ ] Documentation
-- [ ] Déploiement
+### Phase 4 : Gestion des Interventions 🔄 EN COURS
+- [ ] Workflow complet d'intervention
+- [ ] Suivi en temps réel des interventions
+- [ ] Rapports d'intervention
+- [ ] Communication agent ↔ dashboard
+
+### Phase 5 : Cartographie 🔄 EN COURS
+- [ ] Carte interactive avec React Leaflet
+- [ ] Géolocalisation des alertes
+- [ ] Position des agents en temps réel
+- [ ] Optimisation des trajets
+
+### Phase 6 : Fonctionnalités Avancées ⏳ PLANIFIÉE
+- [ ] Assignation automatique intelligente
+- [ ] Prédictions et analytics avancées
+- [ ] Application mobile pour agents
+- [ ] Notifications push en temps réel
+
+### Phase 7 : Optimisation ⏳ PLANIFIÉE
+- [ ] Performance et caching avancé
+- [ ] Tests complets E2E
+- [ ] Documentation complète
+- [ ] Déploiement production
 
 ## 📈 Métriques Clés à Surveiller
 
@@ -180,6 +260,28 @@ npm run test
 - **Satisfaction** : Feedback des agriculteurs
 - **Couverture géographique** : Zones d'utilisation
 
+## 🔄 Workflow Alertes → Agents → Interventions
+
+### 1. Détection d'Alerte (Bot WhatsApp)
+```
+Agriculteur envoie image → Analyse OpenEPI → Détection problème → Création alerte
+```
+
+### 2. Assignation d'Agent (Dashboard)
+```
+Alerte créée → Algorithme d'assignation → Agent le plus proche → Notification agent
+```
+
+### 3. Intervention (Terrain)
+```
+Agent reçoit mission → Se déplace → Arrive chez agriculteur → Effectue intervention → Rapport
+```
+
+### 4. Suivi et Clôture (Dashboard)
+```
+Rapport agent → Validation → Clôture alerte → Feedback agriculteur → Analytics
+```
+
 ## 🔄 Intégration avec le Bot
 
 ### Collecte de Données
@@ -188,11 +290,13 @@ Le dashboard collecte automatiquement les données du bot via :
 - **Webhooks** : Événements en temps réel
 - **Polling** : Métriques périodiques
 - **Base de données partagée** : Accès direct aux données
+- **Géolocalisation** : Position des agents et alertes
 
 ### Synchronisation
 - **Temps réel** : Socket.io pour les updates live
 - **Batch processing** : Agrégation des métriques historiques
 - **Cache** : Redis pour les données fréquemment consultées
+- **Notifications push** : Alertes aux agents mobiles
 
 ## 🎨 Design System
 

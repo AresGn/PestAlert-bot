@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   Home,
-  Bell
+  Bell,
+  UserCheck
 } from 'lucide-react';
 
 function Layout() {
@@ -22,6 +23,7 @@ function Layout() {
     { name: 'Tableau de bord', href: '/', icon: Home },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Alertes', href: '/alerts', icon: AlertTriangle },
+    { name: 'Agents', href: '/agents', icon: UserCheck },
     { name: 'Utilisateurs', href: '/users', icon: Users },
     { name: 'Paramètres', href: '/settings', icon: Settings },
   ];
