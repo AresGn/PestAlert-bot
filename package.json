@@ -11,11 +11,20 @@
     "db:generate": "cd packages/core && npx prisma generate",
     "db:studio": "cd packages/core && npx prisma studio",
     "db:reset": "cd packages/core && npx prisma migrate reset",
+    "db:init": "cd packages/core && npm run db:init",
     "bot:start": "nx serve bot",
     "api:start": "nx serve api",
     "dashboard:start": "nx serve dashboard",
+    "web:start": "cd apps/web && npm run dev",
     "lint": "nx run-many --target=lint --all",
-    "format": "nx run-many --target=format --all"
+    "format": "nx run-many --target=format --all",
+    "setup": "node configure-env.js",
+    "setup:check": "node configure-env.js --check",
+    "setup:force": "node configure-env.js --force",
+    "install:all": "npm install && cd packages/core && npm install && cd ../api && npm install && cd ../bot && npm install && cd ../dashboard && npm install && cd ../../apps/web && npm install",
+    "clean": "rm -rf node_modules packages/*/node_modules apps/*/node_modules",
+    "clean:env": "rm -f packages/*/.env apps/*/.env",
+    "postinstall": "npm run db:generate"
   },
   "devDependencies": {
     "@nx/js": "^17.0.0",
