@@ -1,6 +1,7 @@
 import { Client, LocalAuth, MessageMedia } from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
 import dotenv from 'dotenv';
+import express from 'express';
 import { PestMonitoringService } from './services/pestMonitoringService';
 import { LoggingService } from './services/loggingService';
 import { UserSessionService, UserState } from './services/userSessionService';
@@ -11,6 +12,30 @@ import { AlertService } from './services/alertService';
 import { FarmerData } from './types';
 
 dotenv.config();
+
+// Créer un serveur Express pour le health check
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'PestAlert WhatsApp Bot is running',
+    status: 'active'
+  });
+});
+
+// Démarrer le serveur Express
+app.listen(PORT, () => {
+  console.log(`🌐 Health check server running on port ${PORT}`);
+});
 
 // Initialisation des services
 const pestMonitoring = new PestMonitoringService();
