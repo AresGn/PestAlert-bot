@@ -166,3 +166,6 @@ storybook-static/
 # Backup files
 *.bak
 *.backup
+
+# Separate GitHub repositories
+pestalert-bot-railway/

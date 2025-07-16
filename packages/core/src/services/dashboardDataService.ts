@@ -260,10 +260,16 @@ export class DashboardDataService {
 
   /**
    * Enregistrer une session bot
+   * TODO: Corriger le schéma Prisma pour BotSession
    */
   async recordBotSession(userId: string, userPhone: string, userName?: string, location?: any) {
+    // Temporairement désactivé à cause du problème de schéma Prisma
+    console.log(`📊 [Temp] Session bot: ${userPhone} (${userId})`);
+    return null;
+
+    /*
     return await this.prisma.botSession.upsert({
-      where: { userId },
+      where: { userId: userId },
       update: {
         lastActivity: new Date(),
         messageCount: { increment: 1 }
@@ -279,6 +285,7 @@ export class DashboardDataService {
         location
       }
     });
+    */
   }
 
   /**

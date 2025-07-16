@@ -73,7 +73,7 @@ model Intervention {
 // Sessions du bot WhatsApp
 model BotSession {
   id          String   @id @default(cuid())
-  userId      String   @map("user_id")
+  userId      String   @unique @map("user_id")
   userPhone   String   @map("user_phone")
   userName    String?  @map("user_name")
   state       String   // IDLE, MAIN_MENU, WAITING_FOR_HEALTH_IMAGE, etc.
@@ -85,7 +85,6 @@ model BotSession {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("bot_sessions")
-  @@index([userId])
   @@index([startTime])
 }
 

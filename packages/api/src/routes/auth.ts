@@ -1,7 +1,8 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { AuthController } from '../controllers/authController';
 import { authMiddleware } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
+import { authenticateBot } from '../middleware/botAuth';
 import { body } from 'express-validator';
 
 const router = Router();
@@ -73,5 +74,46 @@ router.put('/password', [
     .withMessage('Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre'),
   validateRequest
 ], authController.changePassword.bind(authController));
+
+/**
+ * @route POST /api/auth/bot-login
+ * @desc Authentification des bots
+ * @access Public
+ */
+router.post('/bot-login', [
+  body('botId')
+    .notEmpty()
+    .withMessage('Bot ID requis'),
+  body('secret')
+    .notEmpty()
+    .withMessage('Secret requis'),
+  validateRequest
+], (req: Request, res: Response) => {
+  try {
+    const { botId, secret } = req.body;
+
+    const token = authenticateBot(botId, secret);
+
+    if (token) {
+      res.json({
+        success: true,
+        token,
+        botId,
+        message: 'Bot authentifié avec succès'
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        error: 'Identifiants bot invalides'
+      });
+    }
+  } catch (error) {
+    console.error('Erreur authentification bot:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur interne du serveur'
+    });
+  }
+});
 
 export default router;
