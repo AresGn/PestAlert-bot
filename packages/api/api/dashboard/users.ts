@@ -3,6 +3,29 @@ import { Client } from 'pg';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
+// Interfaces pour le typage des données
+interface UserStats {
+  total_users: string;
+  active_users: string;
+  new_users_30_days: string;
+  active_last_7_days: string;
+}
+
+interface UserRow {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  created_at: string;
+  last_login: string;
+  is_active: boolean;
+}
+
+interface ActivityRow {
+  date: string;
+  logins: string;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Configuration CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -43,7 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     `;
     
     const statsResult = await client.query(usersStatsQuery);
-    const stats = statsResult.rows[0];
+    const stats: UserStats = statsResult.rows[0];
     
     // Récupérer la liste des utilisateurs récents
     const recentUsersQuery = `
@@ -77,7 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           newUsers: parseInt(stats.new_users_30_days),
           activeLastWeek: parseInt(stats.active_last_7_days)
         },
-        recentUsers: usersResult.rows.map(user => ({
+        recentUsers: usersResult.rows.map((user: UserRow) => ({
           id: user.id,
           name: user.name,
           email: user.email,
@@ -86,7 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           lastLogin: user.last_login,
           isActive: user.is_active
         })),
-        activity: activityResult.rows.map(row => ({
+        activity: activityResult.rows.map((row: ActivityRow) => ({
           date: row.date,
           logins: parseInt(row.logins)
         }))

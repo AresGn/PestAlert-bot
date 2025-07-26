@@ -3,6 +3,14 @@ import { Client } from 'pg';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
+// Interface pour les statistiques des alertes
+interface AlertStats {
+  total_alerts?: string;
+  active_alerts?: string;
+  high_priority?: string;
+  alerts_today?: string;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Configuration CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -49,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log('Table pest_alerts non trouvée, utilisation de données simulées');
     }
     
-    const stats = statsResult.rows[0] || {};
+    const stats: AlertStats = statsResult.rows[0] || {};
     
     // Alertes récentes (simulées si la table n'existe pas)
     const recentAlerts = [
