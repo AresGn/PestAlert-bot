@@ -3,7 +3,7 @@ import { Client } from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const DATABASE_URL = "postgresql://neondb_owner:npg_HU4XsFtRMPa0@ep-white-field-adpx7w8i-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require";
+const DATABASE_URL = process.env.DATABASE_URL;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Configuration CORS
