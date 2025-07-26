@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'https://pestalert-db5q5zitx-ares-projects-0b0ee8dc.vercel.app';
 
 interface ApiResponse<T> {
   success: boolean;

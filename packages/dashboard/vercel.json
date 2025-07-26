@@ -18,7 +18,7 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://pestalert-esn2mpmye-ares-projects-0b0ee8dc.vercel.app",
-    "VITE_SOCKET_URL": "https://pestalert-esn2mpmye-ares-projects-0b0ee8dc.vercel.app"
+    "VITE_API_URL": "https://pestalert-db5q5zitx-ares-projects-0b0ee8dc.vercel.app",
+    "VITE_SOCKET_URL": "https://pestalert-db5q5zitx-ares-projects-0b0ee8dc.vercel.app"
   }
 }

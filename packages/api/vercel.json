@@ -1,9 +1,7 @@
 {
-  "version": 2,
   "functions": {
-    "api/index.ts": {
+    "api/**/*.ts": {
       "maxDuration": 30
     }
-  },
-  "outputDirectory": "."
+  }
 }
