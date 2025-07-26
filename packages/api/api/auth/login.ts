@@ -103,16 +103,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('🎫 Token JWT généré');
 
-    // Réponse de succès
+    // Réponse de succès (format attendu par le dashboard)
     res.status(200).json({
       success: true,
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        lastLogin: user.last_login
+      data: {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          lastLogin: user.last_login
+        }
       }
     });
 

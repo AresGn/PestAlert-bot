@@ -18,7 +18,11 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
         totalFarmers: 156,
         totalAnalyses: 1247,
         successRate: 94.2,
-        alertsCount: 23,
+        alertsCount: 7,
+        activeSessions: 89,
+        analysesToday: 23,
+        systemHealth: 'healthy',
+        uptime: '99.8%',
         timestamp: new Date().toISOString()
       }
     });
