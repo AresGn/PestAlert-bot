@@ -1,16 +1,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
+import { handleCors } from '../../../_utils/cors';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  // Configuration CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  if (handleCors(req, res)) return;
 
   if (req.method === 'GET') {
     try {

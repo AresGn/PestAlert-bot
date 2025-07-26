@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { Client } from 'pg';
+import { handleCors } from '../../../_utils/cors';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -12,15 +13,7 @@ interface AlertStats {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Configuration CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  if (handleCors(req, res)) return;
 
   if (req.method !== 'GET') {
     res.status(405).json({
@@ -142,10 +135,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: true,
       data: {
         stats: {
-          totalAlerts: parseInt(stats.total_alerts) || 33,
-          activeAlerts: parseInt(stats.active_alerts) || 7,
-          highPriority: parseInt(stats.high_priority) || 3,
-          alertsToday: parseInt(stats.alerts_today) || 2
+          totalAlerts: parseInt(stats.total_alerts as string || '33'),
+          activeAlerts: parseInt(stats.active_alerts as string || '7'),
+          highPriority: parseInt(stats.high_priority as string || '3'),
+          alertsToday: parseInt(stats.alerts_today as string || '2')
         },
         recentAlerts,
         alertsByType,

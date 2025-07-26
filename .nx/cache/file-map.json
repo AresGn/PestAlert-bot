@@ -1,0 +1,737 @@
+{
+  "version": "6.0",
+  "nxVersion": "17.3.2",
+  "deps": {
+    "bcryptjs": "^3.0.2",
+    "pg": "^8.16.3",
+    "@nx/js": "^17.0.0",
+    "@nx/node": "^17.0.0",
+    "@nx/react": "^17.0.0",
+    "@nx/workspace": "^17.0.0",
+    "nx": "^17.0.0",
+    "typescript": "^5.0.0"
+  },
+  "pathMappings": {
+    "@pestalert/core": [
+      "packages/core/src"
+    ],
+    "@pestalert/shared": [
+      "packages/shared/src"
+    ],
+    "@pestalert/api": [
+      "packages/api/src"
+    ],
+    "@pestalert/bot": [
+      "packages/bot/src"
+    ],
+    "@pestalert/dashboard": [
+      "packages/dashboard/src"
+    ]
+  },
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {},
+    "nonProjectFiles": [
+      {
+        "file": ".env_global.example",
+        "hash": "2172046145083232437"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "16207371679764308626"
+      },
+      {
+        "file": "DASHBOARD_INTEGRATION_GUIDE.md",
+        "hash": "1687776835138798900"
+      },
+      {
+        "file": "Dockerfile.bot",
+        "hash": "11026785455796630894"
+      },
+      {
+        "file": "ENVIRONMENT_VARIABLES.md",
+        "hash": "3009824011990754685"
+      },
+      {
+        "file": "QUICK_START.md",
+        "hash": "15290887539988249582"
+      },
+      {
+        "file": "README.md",
+        "hash": "6232303101378484853"
+      },
+      {
+        "file": "agribot_monorepo_readme.md",
+        "hash": "1599439758006830272"
+      },
+      {
+        "file": "apps/web/index.html",
+        "hash": "5826010157709958307"
+      },
+      {
+        "file": "apps/web/package-lock.json",
+        "hash": "12136089695882702564"
+      },
+      {
+        "file": "apps/web/package.json",
+        "hash": "7762248598617246332"
+      },
+      {
+        "file": "apps/web/postcss.config.js",
+        "hash": "1121830044826443979"
+      },
+      {
+        "file": "apps/web/src/App.css",
+        "hash": "4106622878446954411"
+      },
+      {
+        "file": "apps/web/src/App.tsx",
+        "hash": "8394962537230540125"
+      },
+      {
+        "file": "apps/web/src/index.css",
+        "hash": "16667222318532474662"
+      },
+      {
+        "file": "apps/web/src/main.tsx",
+        "hash": "12948679595907665671"
+      },
+      {
+        "file": "apps/web/tailwind.config.js",
+        "hash": "4536431498800774481"
+      },
+      {
+        "file": "apps/web/vite.config.ts",
+        "hash": "13799758081095659164"
+      },
+      {
+        "file": "configure-env.js",
+        "hash": "16061169244092136344"
+      },
+      {
+        "file": "configure-vercel-env.md",
+        "hash": "16646568862527886614"
+      },
+      {
+        "file": "deploy-bot-railway.sh",
+        "hash": "4246997810928722967"
+      },
+      {
+        "file": "deploy-dashboard.js",
+        "hash": "14235620331375092313"
+      },
+      {
+        "file": "deploy-vercel.js",
+        "hash": "9240879089559058691"
+      },
+      {
+        "file": "detection_reality_check.md",
+        "hash": "1467058393737823325"
+      },
+      {
+        "file": "extract-bot-for-railway.js",
+        "hash": "1604966583116757818"
+      },
+      {
+        "file": "openepi_enhanced_doc.md",
+        "hash": "1996926292801451147"
+      },
+      {
+        "file": "openepi_nodejs_documentation.md",
+        "hash": "12793562886652154731"
+      },
+      {
+        "file": "openepi_readme.md",
+        "hash": "18432419363309894713"
+      },
+      {
+        "file": "openepi_vs_nous.md",
+        "hash": "3117618141482767674"
+      },
+      {
+        "file": "package-lock.json",
+        "hash": "11472005071603898073"
+      },
+      {
+        "file": "package.json",
+        "hash": "4299872655461238848"
+      },
+      {
+        "file": "packages/api/.gitignore",
+        "hash": "15640894140108247102"
+      },
+      {
+        "file": "packages/api/_utils/cors.ts",
+        "hash": "15015841537728959380"
+      },
+      {
+        "file": "packages/api/api/auth/login.ts",
+        "hash": "12319257140418576593"
+      },
+      {
+        "file": "packages/api/api/auth/me.ts",
+        "hash": "8788226627132252038"
+      },
+      {
+        "file": "packages/api/api/dashboard/alerts.ts",
+        "hash": "13018935151931610459"
+      },
+      {
+        "file": "packages/api/api/dashboard/analytics.ts",
+        "hash": "15433660182312281867"
+      },
+      {
+        "file": "packages/api/api/dashboard/metrics.ts",
+        "hash": "10147662460679305081"
+      },
+      {
+        "file": "packages/api/api/dashboard/system/health.ts",
+        "hash": "15891747963093122487"
+      },
+      {
+        "file": "packages/api/api/dashboard/users.ts",
+        "hash": "3841877353490004652"
+      },
+      {
+        "file": "packages/api/api/health.ts",
+        "hash": "8076079593384116982"
+      },
+      {
+        "file": "packages/api/dashboard/analytics.ts",
+        "hash": "16378676537786219028"
+      },
+      {
+        "file": "packages/api/dashboard/charts/performance.ts",
+        "hash": "13617185294087790529"
+      },
+      {
+        "file": "packages/api/dashboard/charts/usage.ts",
+        "hash": "1149565168231111313"
+      },
+      {
+        "file": "packages/api/dashboard/users.ts",
+        "hash": "2043662918529923454"
+      },
+      {
+        "file": "packages/api/package-lock.json",
+        "hash": "14366217334255525307"
+      },
+      {
+        "file": "packages/api/package.json",
+        "hash": "4318378569325448850"
+      },
+      {
+        "file": "packages/api/src/controllers/authController.ts",
+        "hash": "7257988868187471449"
+      },
+      {
+        "file": "packages/api/src/controllers/botDataController.ts",
+        "hash": "1487440101899324213"
+      },
+      {
+        "file": "packages/api/src/controllers/dashboardController.ts",
+        "hash": "1794805512965358259"
+      },
+      {
+        "file": "packages/api/src/middleware/auth.ts",
+        "hash": "2034331617630262880"
+      },
+      {
+        "file": "packages/api/src/middleware/botAuth.ts",
+        "hash": "9451851547045505610"
+      },
+      {
+        "file": "packages/api/src/middleware/validation.ts",
+        "hash": "1526647595891813073"
+      },
+      {
+        "file": "packages/api/src/routes/auth.ts",
+        "hash": "16416540449240323109"
+      },
+      {
+        "file": "packages/api/src/routes/dashboard.ts",
+        "hash": "13176826859029569938"
+      },
+      {
+        "file": "packages/api/src/server.ts",
+        "hash": "18000611931146564491"
+      },
+      {
+        "file": "packages/api/tsconfig.json",
+        "hash": "12264420072455165214"
+      },
+      {
+        "file": "packages/api/vercel.json",
+        "hash": "12853400348524390456"
+      },
+      {
+        "file": "packages/bot/.dockerignore",
+        "hash": "8430853945195853938"
+      },
+      {
+        "file": "packages/bot/.env.example",
+        "hash": "6907883328041701049"
+      },
+      {
+        "file": "packages/bot/Dockerfile",
+        "hash": "3913451040041028633"
+      },
+      {
+        "file": "packages/bot/ENHANCED_HEALTH_ANALYSIS_SUMMARY.md",
+        "hash": "9204476877578437820"
+      },
+      {
+        "file": "packages/bot/GUIDE_DEMARRAGE_RAPIDE.md",
+        "hash": "1895796043418995796"
+      },
+      {
+        "file": "packages/bot/IMPLEMENTATION_SUMMARY.md",
+        "hash": "13497413837965183457"
+      },
+      {
+        "file": "packages/bot/MIGRATION_GUIDE_ENHANCED_HEALTH.md",
+        "hash": "12906911520150421297"
+      },
+      {
+        "file": "packages/bot/MODIFICATIONS_SUMMARY.md",
+        "hash": "11696306367360303001"
+      },
+      {
+        "file": "packages/bot/RAILWAY_DEPLOYMENT.md",
+        "hash": "14836371529707933599"
+      },
+      {
+        "file": "packages/bot/README.md",
+        "hash": "4397113849673015198"
+      },
+      {
+        "file": "packages/bot/README_OPENEPI_INTEGRATION.md",
+        "hash": "13868130439864058995"
+      },
+      {
+        "file": "packages/bot/SECURITY_FILTERS.md",
+        "hash": "17064174292672506461"
+      },
+      {
+        "file": "packages/bot/audio/Alerte.mp3",
+        "hash": "6225712191549029937"
+      },
+      {
+        "file": "packages/bot/audio/CropIncertaine_Faible.mp3",
+        "hash": "10115517186210676106"
+      },
+      {
+        "file": "packages/bot/audio/CropIncertaine_TresFaible.mp3",
+        "hash": "4112161474309962703"
+      },
+      {
+        "file": "packages/bot/audio/CropMalade.mp3",
+        "hash": "921346340750641428"
+      },
+      {
+        "file": "packages/bot/audio/CropMoyenne.mp3",
+        "hash": "12890692636811230483"
+      },
+      {
+        "file": "packages/bot/audio/CropSains.mp3",
+        "hash": "4422295847495122773"
+      },
+      {
+        "file": "packages/bot/audio/Incertaine.mp3",
+        "hash": "2086713002451048891"
+      },
+      {
+        "file": "packages/bot/audio/README_Incertaine.md",
+        "hash": "11003118081681704384"
+      },
+      {
+        "file": "packages/bot/audio/README_NOUVEAUX_FICHIERS.md",
+        "hash": "16448204071575044426"
+      },
+      {
+        "file": "packages/bot/audio/Reponse.mp3",
+        "hash": "10398831127878873972"
+      },
+      {
+        "file": "packages/bot/audio/Welcome.mp3",
+        "hash": "853583904465393381"
+      },
+      {
+        "file": "packages/bot/openapi-spec.json",
+        "hash": "4738239939995778501"
+      },
+      {
+        "file": "packages/bot/package-lock.json",
+        "hash": "16886331494396761788"
+      },
+      {
+        "file": "packages/bot/package.json",
+        "hash": "12750603838876334843"
+      },
+      {
+        "file": "packages/bot/railway.json",
+        "hash": "5647885737447303003"
+      },
+      {
+        "file": "packages/bot/src/bot-simple.ts",
+        "hash": "12431336236014581882"
+      },
+      {
+        "file": "packages/bot/src/config/confidenceThresholds.ts",
+        "hash": "11979580049029238143"
+      },
+      {
+        "file": "packages/bot/src/config/openepi.ts",
+        "hash": "1054634423358963576"
+      },
+      {
+        "file": "packages/bot/src/explore-api.ts",
+        "hash": "15594516349554810638"
+      },
+      {
+        "file": "packages/bot/src/index.ts",
+        "hash": "4404850093037217791"
+      },
+      {
+        "file": "packages/bot/src/services/alertService.ts",
+        "hash": "17893029748266853204"
+      },
+      {
+        "file": "packages/bot/src/services/audioService.ts",
+        "hash": "8082563642924544479"
+      },
+      {
+        "file": "packages/bot/src/services/authService.ts",
+        "hash": "13645329838748370392"
+      },
+      {
+        "file": "packages/bot/src/services/confidenceAnalysisService.ts",
+        "hash": "3005563680977511627"
+      },
+      {
+        "file": "packages/bot/src/services/cropHealthService.ts",
+        "hash": "14702112116490017175"
+      },
+      {
+        "file": "packages/bot/src/services/dashboardIntegrationService.ts",
+        "hash": "16351531975666879504"
+      },
+      {
+        "file": "packages/bot/src/services/errorHandlingService.ts",
+        "hash": "7607571535493860712"
+      },
+      {
+        "file": "packages/bot/src/services/healthAnalysisService.ts",
+        "hash": "15412008166532002190"
+      },
+      {
+        "file": "packages/bot/src/services/imageProcessingService.ts",
+        "hash": "16923415136062462769"
+      },
+      {
+        "file": "packages/bot/src/services/loggingService.ts",
+        "hash": "13345699106656764592"
+      },
+      {
+        "file": "packages/bot/src/services/menuService.ts",
+        "hash": "8958415584096773620"
+      },
+      {
+        "file": "packages/bot/src/services/pestMonitoringService.ts",
+        "hash": "5995769867908696675"
+      },
+      {
+        "file": "packages/bot/src/services/userSessionService.ts",
+        "hash": "5585880233654535985"
+      },
+      {
+        "file": "packages/bot/src/test-auth.ts",
+        "hash": "16223852654144702654"
+      },
+      {
+        "file": "packages/bot/src/test-enhanced-health-analysis.ts",
+        "hash": "1422619150929702528"
+      },
+      {
+        "file": "packages/bot/src/test-filters.ts",
+        "hash": "15186510839031677826"
+      },
+      {
+        "file": "packages/bot/src/test-new-flow.ts",
+        "hash": "1170450495287732951"
+      },
+      {
+        "file": "packages/bot/src/test-routes.ts",
+        "hash": "590267977312031694"
+      },
+      {
+        "file": "packages/bot/src/test-services.ts",
+        "hash": "1120551886703958237"
+      },
+      {
+        "file": "packages/bot/src/types/index.ts",
+        "hash": "11023264658040418527"
+      },
+      {
+        "file": "packages/bot/test_crop_health_english.py",
+        "hash": "13641236460736666396"
+      },
+      {
+        "file": "packages/bot/tsconfig.json",
+        "hash": "12264420072455165214"
+      },
+      {
+        "file": "packages/core/.env.example",
+        "hash": "17293234749490906652"
+      },
+      {
+        "file": "packages/core/package-lock.json",
+        "hash": "14272664427114113453"
+      },
+      {
+        "file": "packages/core/package.json",
+        "hash": "4569728784048325117"
+      },
+      {
+        "file": "packages/core/prisma/schema.prisma",
+        "hash": "10323305028020341720"
+      },
+      {
+        "file": "packages/core/src/scripts/initDatabase.ts",
+        "hash": "2737966266143154243"
+      },
+      {
+        "file": "packages/core/src/services/botDataService.ts",
+        "hash": "1323023723475113730"
+      },
+      {
+        "file": "packages/core/src/services/dashboardDataService.ts",
+        "hash": "9347441656785041766"
+      },
+      {
+        "file": "packages/core/tsconfig.json",
+        "hash": "3547585099189407734"
+      },
+      {
+        "file": "packages/dashboard/.env.example",
+        "hash": "9301834354427884906"
+      },
+      {
+        "file": "packages/dashboard/.env.production",
+        "hash": "12929691512645153864"
+      },
+      {
+        "file": "packages/dashboard/.gitignore",
+        "hash": "15640894140108247102"
+      },
+      {
+        "file": "packages/dashboard/IMPLEMENTATION_STATUS.md",
+        "hash": "6681862139817021915"
+      },
+      {
+        "file": "packages/dashboard/README.md",
+        "hash": "6880285622273010311"
+      },
+      {
+        "file": "packages/dashboard/index.html",
+        "hash": "238687854309467528"
+      },
+      {
+        "file": "packages/dashboard/package-lock.json",
+        "hash": "6216220126131203193"
+      },
+      {
+        "file": "packages/dashboard/package.json",
+        "hash": "2597018908134003016"
+      },
+      {
+        "file": "packages/dashboard/postcss.config.js",
+        "hash": "1121830044826443979"
+      },
+      {
+        "file": "packages/dashboard/src/App.css",
+        "hash": "4106622878446954411"
+      },
+      {
+        "file": "packages/dashboard/src/App.tsx",
+        "hash": "9200510162320370571"
+      },
+      {
+        "file": "packages/dashboard/src/components/AgentCard.tsx",
+        "hash": "9355873316124008633"
+      },
+      {
+        "file": "packages/dashboard/src/components/AgentMap.tsx",
+        "hash": "9772437357604905876"
+      },
+      {
+        "file": "packages/dashboard/src/components/Layout.tsx",
+        "hash": "7644382860852710611"
+      },
+      {
+        "file": "packages/dashboard/src/components/LoadingSpinner.tsx",
+        "hash": "6166279286917026650"
+      },
+      {
+        "file": "packages/dashboard/src/components/MetricCard.tsx",
+        "hash": "6567954196149414567"
+      },
+      {
+        "file": "packages/dashboard/src/components/PerformanceChart.tsx",
+        "hash": "8529429609146520776"
+      },
+      {
+        "file": "packages/dashboard/src/components/ProtectedRoute.tsx",
+        "hash": "9151262931983742842"
+      },
+      {
+        "file": "packages/dashboard/src/components/RecentAlerts.tsx",
+        "hash": "11361726937324336338"
+      },
+      {
+        "file": "packages/dashboard/src/components/SystemStatus.tsx",
+        "hash": "15733637694524911304"
+      },
+      {
+        "file": "packages/dashboard/src/components/UsageChart.tsx",
+        "hash": "13175692475233962689"
+      },
+      {
+        "file": "packages/dashboard/src/contexts/AuthContext.tsx",
+        "hash": "1015584918649555458"
+      },
+      {
+        "file": "packages/dashboard/src/index.css",
+        "hash": "16667222318532474662"
+      },
+      {
+        "file": "packages/dashboard/src/main.tsx",
+        "hash": "12948679595907665671"
+      },
+      {
+        "file": "packages/dashboard/src/pages/Agents.tsx",
+        "hash": "17338744921406826665"
+      },
+      {
+        "file": "packages/dashboard/src/pages/Alerts.tsx",
+        "hash": "6418774235977997154"
+      },
+      {
+        "file": "packages/dashboard/src/pages/Analytics.tsx",
+        "hash": "1035646641468694683"
+      },
+      {
+        "file": "packages/dashboard/src/pages/Dashboard.tsx",
+        "hash": "8706151796024214800"
+      },
+      {
+        "file": "packages/dashboard/src/pages/Login.tsx",
+        "hash": "9092904364641933690"
+      },
+      {
+        "file": "packages/dashboard/src/pages/Settings.tsx",
+        "hash": "12487371928038582544"
+      },
+      {
+        "file": "packages/dashboard/src/pages/Users.tsx",
+        "hash": "2546317304166641010"
+      },
+      {
+        "file": "packages/dashboard/src/services/authService.ts",
+        "hash": "10461549838103857988"
+      },
+      {
+        "file": "packages/dashboard/src/services/dashboardService.ts",
+        "hash": "2519056497128994887"
+      },
+      {
+        "file": "packages/dashboard/start-dashboard.md",
+        "hash": "14646516823902525050"
+      },
+      {
+        "file": "packages/dashboard/tailwind.config.js",
+        "hash": "4536431498800774481"
+      },
+      {
+        "file": "packages/dashboard/vercel.json",
+        "hash": "16751265932440528463"
+      },
+      {
+        "file": "packages/dashboard/vite.config.ts",
+        "hash": "723547016104581545"
+      },
+      {
+        "file": "railway.bot.json",
+        "hash": "7148051340962499660"
+      },
+      {
+        "file": "setup-vercel-env.js",
+        "hash": "7665204300917595930"
+      },
+      {
+        "file": "setup.bat",
+        "hash": "9282580135822318832"
+      },
+      {
+        "file": "start-bot-dashboard-integration.bat",
+        "hash": "2488277268887537354"
+      },
+      {
+        "file": "start_all.bat",
+        "hash": "13541742659403825179"
+      },
+      {
+        "file": "start_api.bat",
+        "hash": "9698194672471785109"
+      },
+      {
+        "file": "start_bot.bat",
+        "hash": "17700119067773184039"
+      },
+      {
+        "file": "start_dashboard.bat",
+        "hash": "5573133014785896342"
+      },
+      {
+        "file": "start_web.bat",
+        "hash": "1453270700710499973"
+      },
+      {
+        "file": "test-api-endpoints.js",
+        "hash": "2490000816558390764"
+      },
+      {
+        "file": "test-corrected-api.js",
+        "hash": "4931431466109095985"
+      },
+      {
+        "file": "test-dashboard-connection.js",
+        "hash": "7737810287928230881"
+      },
+      {
+        "file": "test-dashboard-login.js",
+        "hash": "6021052125795799953"
+      },
+      {
+        "file": "test-final-dashboard.js",
+        "hash": "1375318291946370261"
+      },
+      {
+        "file": "test-new-endpoints.js",
+        "hash": "3791198811346567456"
+      },
+      {
+        "file": "test-official-dashboard.js",
+        "hash": "5520036258447086078"
+      },
+      {
+        "file": "tsconfig.json",
+        "hash": "3498700425597532789"
+      },
+      {
+        "file": "whatsapp-bot-guide.md",
+        "hash": "3534369359122161141"
+      }
+    ]
+  }
+}

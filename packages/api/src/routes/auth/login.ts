@@ -2,19 +2,12 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { Client } from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { handleCors } from '../../../_utils/cors';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Configuration CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  if (handleCors(req, res)) return;
 
   if (req.method !== 'POST') {
     res.status(405).json({
