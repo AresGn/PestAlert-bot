@@ -45,17 +45,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (savedToken) {
         setToken(savedToken);
         authService.setToken(savedToken);
-        
-        // Vérifier si le token est valide en récupérant le profil
-        const profile = await authService.getProfile();
-        setUser(profile);
+
+        try {
+          // Vérifier si le token est valide en récupérant le profil
+          const profile = await authService.getProfile();
+          setUser(profile);
+        } catch (profileError) {
+          console.warn('Token invalide, suppression:', profileError);
+          // Token invalide, nettoyer
+          localStorage.removeItem('auth_token');
+          setToken(null);
+          setUser(null);
+        }
+      } else {
+        // Mode démo sans authentification
+        setUser({
+          id: 'demo',
+          email: 'demo@pestalert.com',
+          name: 'Utilisateur Démo',
+          role: 'admin',
+          isActive: true,
+          createdAt: new Date().toISOString()
+        });
+        setToken('demo-token');
       }
     } catch (error) {
       console.error('Erreur lors de l\'initialisation de l\'authentification:', error);
-      // Token invalide, nettoyer
-      localStorage.removeItem('auth_token');
-      setToken(null);
-      setUser(null);
+      // En cas d'erreur, utiliser le mode démo
+      setUser({
+        id: 'demo',
+        email: 'demo@pestalert.com',
+        name: 'Utilisateur Démo',
+        role: 'admin',
+        isActive: true,
+        createdAt: new Date().toISOString()
+      });
+      setToken('demo-token');
     } finally {
       setIsLoading(false);
     }

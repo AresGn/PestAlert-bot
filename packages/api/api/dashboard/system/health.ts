@@ -15,20 +15,30 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).json({
       success: true,
       data: {
-        activeUsers: 156,
-        totalAnalysesToday: 23,
-        totalAnalysesWeek: 167,
-        totalAnalysesMonth: 1247,
-        activeAlerts: 7,
-        resolvedAlertsToday: 3,
-        systemStatus: {
-          bot: 'online',
-          api: 'online',
-          database: 'online',
-          openepi: 'online'
+        status: 'healthy',
+        services: {
+          bot: {
+            status: 'online',
+            lastCheck: new Date().toISOString(),
+            responseTime: 120
+          },
+          api: {
+            status: 'online',
+            lastCheck: new Date().toISOString(),
+            responseTime: 45
+          },
+          database: {
+            status: 'online',
+            lastCheck: new Date().toISOString(),
+            responseTime: 25
+          },
+          openepi: {
+            status: 'online',
+            lastCheck: new Date().toISOString(),
+            responseTime: 180
+          }
         },
-        averageResponseTime: 245,
-        successRate: 94.2,
+        uptime: '99.8%',
         timestamp: new Date().toISOString()
       }
     });

@@ -79,11 +79,11 @@ function MetricCard({ title, value, icon: Icon, color, subtitle, trend }: Metric
         </div>
       </div>
       
-      {trend && (
+      {trend && trend.value !== undefined && (
         <div className="bg-gray-50 px-5 py-3">
           <div className="text-sm">
             <span className={`font-medium ${colors.text}`}>
-              {trend.value.toLocaleString()}
+              {typeof trend.value === 'number' ? trend.value.toLocaleString() : trend.value}
             </span>
             <span className="text-gray-500 ml-1">
               {trend.label}

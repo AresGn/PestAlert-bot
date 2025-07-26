@@ -21,8 +21,8 @@ function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
     );
   }
 
-  // Rediriger vers la page de connexion si non authentifié
-  if (!isAuthenticated) {
+  // Rediriger vers la page de connexion si non authentifié (sauf en mode démo)
+  if (!isAuthenticated && user?.id !== 'demo') {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

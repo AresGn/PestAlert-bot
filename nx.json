@@ -1,0 +1,161 @@
+{
+  "extends": "@nx/workspace/presets/npm.json",
+  "targetDefaults": {
+    "build": {
+      "cache": true
+    },
+    "lint": {
+      "cache": true
+    },
+    "test": {
+      "cache": true
+    }
+  },
+  "generators": {
+    "@nx/react": {
+      "application": {
+        "style": "css",
+        "linter": "eslint",
+        "bundler": "vite"
+      }
+    }
+  },
+  "projects": {
+    "dashboard": {
+      "type": "app",
+      "projectType": "application",
+      "sourceRoot": "packages/dashboard/src",
+      "targets": {
+        "serve": {
+          "executor": "@nx/vite:dev-server",
+          "options": {
+            "buildTarget": "dashboard:build"
+          }
+        },
+        "build": {
+          "executor": "@nx/vite:build",
+          "options": {
+            "outputPath": "packages/dashboard/dist"
+          }
+        },
+        "preview": {
+          "executor": "@nx/vite:preview-server",
+          "options": {
+            "buildTarget": "dashboard:build"
+          }
+        },
+        "test": {
+          "executor": "@nx/vite:test",
+          "options": {}
+        }
+      }
+    },
+    "api": {
+      "type": "library",
+      "projectType": "library",
+      "sourceRoot": "packages/api/src",
+      "targets": {
+        "build": {
+          "executor": "@nx/js:tsc",
+          "options": {
+            "outputPath": "packages/api/dist",
+            "main": "packages/api/src/index.ts",
+            "tsConfig": "packages/api/tsconfig.json"
+          }
+        },
+        "serve": {
+          "executor": "@nx/node:execute",
+          "options": {
+            "buildTarget": "api:build"
+          }
+        },
+        "test": {
+          "executor": "@nx/jest:jest",
+          "options": {}
+        }
+      }
+    },
+    "bot": {
+      "type": "library",
+      "projectType": "library",
+      "sourceRoot": "packages/bot/src",
+      "targets": {
+        "build": {
+          "executor": "@nx/js:tsc",
+          "options": {
+            "outputPath": "packages/bot/dist",
+            "main": "packages/bot/src/index.ts",
+            "tsConfig": "packages/bot/tsconfig.json"
+          }
+        },
+        "serve": {
+          "executor": "@nx/node:execute",
+          "options": {
+            "buildTarget": "bot:build"
+          }
+        },
+        "test": {
+          "executor": "@nx/jest:jest",
+          "options": {}
+        }
+      }
+    },
+    "core": {
+      "type": "library",
+      "projectType": "library",
+      "sourceRoot": "packages/core/src",
+      "targets": {
+        "build": {
+          "executor": "@nx/js:tsc",
+          "options": {
+            "outputPath": "packages/core/dist",
+            "main": "packages/core/src/index.ts",
+            "tsConfig": "packages/core/tsconfig.json"
+          }
+        },
+        "test": {
+          "executor": "@nx/jest:jest",
+          "options": {}
+        }
+      }
+    },
+    "shared": {
+      "type": "library",
+      "projectType": "library",
+      "sourceRoot": "packages/shared/src",
+      "targets": {
+        "build": {
+          "executor": "@nx/js:tsc",
+          "options": {
+            "outputPath": "packages/shared/dist",
+            "main": "packages/shared/src/index.ts",
+            "tsConfig": "packages/shared/tsconfig.json"
+          }
+        },
+        "test": {
+          "executor": "@nx/jest:jest",
+          "options": {}
+        }
+      }
+    },
+    "mobile": {
+      "type": "app",
+      "projectType": "application",
+      "sourceRoot": "packages/mobile/src",
+      "targets": {
+        "build": {
+          "executor": "@nx/react-native:build-android",
+          "options": {}
+        },
+        "serve": {
+          "executor": "@nx/react-native:start",
+          "options": {}
+        },
+        "test": {
+          "executor": "@nx/jest:jest",
+          "options": {}
+        }
+      }
+    }
+  }
+}
