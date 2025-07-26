@@ -2,7 +2,6 @@
   "name": "pestalert-bot",
   "version": "1.0.0",
   "private": true,
-
   "scripts": {
     "dev": "nx run-many --target=serve --projects=api,dashboard,bot --parallel",
     "build": "nx run-many --target=build --projects=api,dashboard,web",
@@ -33,5 +32,9 @@
     "@nx/workspace": "^17.0.0",
     "nx": "^17.0.0",
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "pg": "^8.16.3"
   }
 }

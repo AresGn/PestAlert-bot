@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { email, password } = req.body;
-
+    
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -42,20 +42,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     console.log('🔐 Tentative de connexion pour:', email);
-
+    
     // Connexion à la base de données
     await client.connect();
     console.log('✅ Connexion DB réussie');
-
+    
     // Rechercher l'utilisateur dans la base de données
     const userQuery = `
       SELECT id, email, name, role, password, is_active, last_login
-      FROM dashboard_users
+      FROM dashboard_users 
       WHERE email = $1 AND is_active = true
     `;
-
+    
     const userResult = await client.query(userQuery, [email]);
-
+    
     if (userResult.rows.length === 0) {
       console.log('❌ Utilisateur non trouvé:', email);
       return res.status(401).json({
@@ -63,13 +63,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Identifiants invalides'
       });
     }
-
+    
     const user = userResult.rows[0];
     console.log('👤 Utilisateur trouvé:', user.email);
-
+    
     // Vérifier le mot de passe
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
+    
     if (!isPasswordValid) {
       console.log('❌ Mot de passe invalide pour:', email);
       return res.status(401).json({
@@ -77,22 +77,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Identifiants invalides'
       });
     }
-
+    
     console.log('✅ Mot de passe valide');
-
+    
     // Mettre à jour la dernière connexion
     const updateLoginQuery = `
-      UPDATE dashboard_users
+      UPDATE dashboard_users 
       SET last_login = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
     `;
-
+    
     await client.query(updateLoginQuery, [user.id]);
     console.log('📝 Dernière connexion mise à jour');
-
+    
     // Générer le token JWT
     const token = jwt.sign(
-      {
+      { 
         id: user.id,
         email: user.email,
         role: user.role
@@ -100,9 +100,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       process.env.JWT_SECRET || 'pestalert-super-secret-jwt-key-2024',
       { expiresIn: '24h' }
     );
-
+    
     console.log('🎫 Token JWT généré');
-
+    
     // Réponse de succès
     res.status(200).json({
       success: true,
@@ -115,9 +115,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         lastLogin: user.last_login
       }
     });
-
+    
     console.log('🎉 Connexion réussie pour:', email);
-
+    
   } catch (error) {
     console.error('❌ Erreur de connexion:', error);
     res.status(500).json({
